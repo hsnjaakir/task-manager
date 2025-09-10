@@ -1,0 +1,15 @@
+# Laravel
+/vendor
+/node_modules
+.env
+/storage/*.key
+/public/storage
+
+# Vue
+task-manager-frontend/node_modules
+task-manager-frontend/dist
+
+# System
+.idea
+.vscode
+.DS_Store
