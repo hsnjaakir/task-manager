@@ -17,6 +17,6 @@ onMounted(async () => {
 <template>
   <div>
     <h1>Task Management System</h1>
-    <p>{{ message }}</p>
+    <p>Backend Message: {{ message }}</p>
   </div>
 </template>
