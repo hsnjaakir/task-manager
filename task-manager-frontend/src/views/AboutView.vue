@@ -1,15 +1,22 @@
+<script setup>
+import { ref, onMounted } from 'vue'
+import api from '@/plugins/axios'
+
+const message = ref('')
+
+onMounted(async () => {
+  try {
+    const response = await api.get('/about') // test endpoint
+    message.value = response.data.message
+  } catch (error) {
+    console.error('API Error:', error)
+  }
+})
+</script>
+
 <template>
-  <div class="about">
-    <h1>This is an about page</h1>
+  <div>
+    <h1>Task Management System</h1>
+    <p>{{ message }}</p>
   </div>
 </template>
-
-<style>
-@media (min-width: 1024px) {
-  .about {
-    min-height: 100vh;
-    display: flex;
-    align-items: center;
-  }
-}
-</style>
