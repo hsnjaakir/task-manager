@@ -17,3 +17,15 @@ use Illuminate\Support\Facades\Route;
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
+
+Route::get('/home', function () {
+    return response()->json([
+        'message' => 'Hello Home page, message from Laravel API'
+    ]);
+});
+
+Route::get('/about', function () {
+    return response()->json([
+        'message' => 'Hello About page, message from Laravel API'
+    ]);
+});
