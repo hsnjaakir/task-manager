@@ -15,23 +15,28 @@ use App\Http\Controllers\Api\AuthController;
 |
 */
 
+
+// Given routes for testing the app whether it is running or not
 // Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 //     return $request->user();
 // });
 
-// Route::get('/home', function () {
-//     return response()->json([
-//         'message' => 'Hello Home page!! Message from Laravel API'
-//     ]);
-// });
+Route::get('/home', function () {
+    return response()->json([
+        'message' => 'Hello Home page!! Message from Laravel API'
+    ]);
+});
 
-// Route::get('/about', function () {
-//     return response()->json([
-//         'message' => 'Hello About page!! Message from Laravel API'
-//     ]);
-// });
+Route::get('/about', function () {
+    return response()->json([
+        'message' => 'Hello About page!! Message from Laravel API'
+    ]);
+});
 
 
+
+
+// The working routes
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 
