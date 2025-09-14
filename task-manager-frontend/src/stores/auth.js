@@ -1,59 +1,84 @@
-// src/stores/auth.js
 import { defineStore } from 'pinia'
-import authService from '../services/authService'
+import authService from '@/services/authService'
 import { setAuthToken, clearAuthToken } from '../plugins/axios'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
     user: null,
     token: localStorage.getItem('token') || null,
+    loading: false,
+    error: null,
   }),
+
+  getters: {
+    isAuthenticated: (state) => !!state.token,
+  },
+
   actions: {
-    // initialize store on app start
-    init() {
-      if (this.token) {
-        setAuthToken(this.token)
-        // optionally: you can load `me()` here to populate user
+    async login(payload) {
+      this.loading = true
+      this.error = null
+      try {
+        const res = await authService.login(payload)
+        const { user, token } = res.data
+        this.user = user
+        this.token = token
+        localStorage.setItem('token', token)
+        setAuthToken(token)
+        return res
+      } catch (err) {
+        this.error = err.response?.data?.message || 'Login failed'
+        throw err
+      } finally {
+        this.loading = false
       }
     },
 
-    // login action used by the UI
-    async login(payload) {
-      const res = await authService.login(payload)
-      const { user, token } = res.data
-      this.user = user
-      this.token = token
-      localStorage.setItem('token', token)
-      setAuthToken(token)
-      return res
-    },
-
-    // register action used by the UI
     async register(payload) {
-      const res = await authService.register(payload)
-      const { user, token } = res.data
-      this.user = user
-      this.token = token
-      localStorage.setItem('token', token)
-      setAuthToken(token)
-      return res
+      this.loading = true
+      this.error = null
+      try {
+        const res = await authService.register(payload)
+        const { user, token } = res.data
+        this.user = user
+        this.token = token
+        localStorage.setItem('token', token)
+        setAuthToken(token)
+        return res
+      } catch (err) {
+        this.error = err.response?.data?.message || 'Register failed'
+        throw err
+      } finally {
+        this.loading = false
+      }
     },
 
-    // local logout (clears token & user)
     async fetchUser() {
       if (!this.token) return null
-      const res = await authService.me()
-      this.user = res.data
-      return res
+      this.loading = true
+      this.error = null
+      try {
+        const res = await authService.me()
+        this.user = res.data
+        return res
+      } catch (err) {
+        this.error = 'Failed to fetch user'
+        throw err
+      } finally {
+        this.loading = false
+      }
     },
 
     async logout() {
+      this.loading = true
       try {
-        await authService.logout() // revoke token on server
+        await authService.logout()
       } catch (e) {
-        // ignore network errors; still clear local
+        // even if server fails, clear locally
+      } finally {
+        this.localLogout()
+        this.loading = false
       }
-      this.localLogout()
     },
 
     localLogout() {
@@ -62,9 +87,13 @@ export const useAuthStore = defineStore('auth', {
       localStorage.removeItem('token')
       clearAuthToken()
     },
-  },
 
-  getters: {
-    isAuthenticated: (state) => !!state.token,
+    init() {
+      const token = localStorage.getItem('token')
+      if (token) {
+        this.token = token
+        setAuthToken(token)
+      }
+    },
   },
 })
