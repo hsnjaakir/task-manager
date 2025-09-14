@@ -61,6 +61,7 @@ onMounted(async () => {
     } catch (e) {
       auth.localLogout()
       router.push('/login')
+      console.log(e)
     }
   }
 })

@@ -4,20 +4,22 @@
     <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-md">
       <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
 
-      <form @submit.prevent="handleLogin">
-        <input
-          v-model="form.email"
-          type="email"
-          placeholder="Email"
-          class="w-full p-2 border rounded mb-3 focus:outline-none focus:ring focus:border-blue-300"
-        />
+      <form class="flex flex-col" @submit.prevent="handleLogin">
+        <div>
+          <input
+            v-model="form.email"
+            type="email"
+            placeholder="Email"
+            class="w-full p-2 border rounded mb-3 focus:outline-none focus:ring focus:border-blue-300"
+          />
 
-        <input
-          v-model="form.password"
-          type="password"
-          placeholder="Password"
-          class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring focus:border-blue-300"
-        />
+          <input
+            v-model="form.password"
+            type="password"
+            placeholder="Password"
+            class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring focus:border-blue-300"
+          />
+        </div>
 
         <button
           type="submit"
