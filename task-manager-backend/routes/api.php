@@ -3,6 +3,7 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\TaskController;
 
 /*
 |--------------------------------------------------------------------------
@@ -21,18 +22,22 @@ use App\Http\Controllers\Api\AuthController;
 //     return $request->user();
 // });
 
-Route::get('/home', function () {
-    return response()->json([
-        'message' => 'Hello Home page!! Message from Laravel API'
-    ]);
-});
+// Route::get('/home', function () {
+//     return response()->json([
+//         'message' => 'Hello Home page!! Message from Laravel API'
+//     ]);
+// });
 
-Route::get('/about', function () {
-    return response()->json([
-        'message' => 'Hello About page!! Message from Laravel API'
-    ]);
-});
+// Route::get('/about', function () {
+//     return response()->json([
+//         'message' => 'Hello About page!! Message from Laravel API'
+//     ]);
+// });
 
+
+Route::middleware('auth:sanctum')->group(function () {
+    Route::apiResource('tasks', TaskController::class);
+});
 
 
 
