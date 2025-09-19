@@ -13,11 +13,17 @@ class StoreTaskRequest extends FormRequest
 
     public function rules(): array
     {
-        return [
-            'title' => 'required|string|max:255',
+        $rules = [
+            'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
-            'status' => 'nullable|in:pending,in_progress,completed',
-            'due_date' => 'nullable|date',
+            'status'      => 'nullable|in:pending,in_progress,completed',
+            'due_date'    => 'nullable|date',
         ];
+
+        if (auth()->check() && auth()->user()->role === 'admin') {
+            $rules['user_id'] = 'required|exists:users,id';
+        }
+
+        return $rules;
     }
 }

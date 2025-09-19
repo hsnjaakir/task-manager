@@ -31,14 +31,13 @@ class TaskController extends Controller
 
     public function update(UpdateTaskRequest $request, Task $task)
     {
-        // $this->authorize('update', $task); // optional if using policies
-        return response()->json($this->taskService->update($task, $request->validated()));
+        $task = $this->taskService->update(Auth::user(), $task, $request->validated());
+        return response()->json($task);
     }
 
     public function destroy(Task $task)
     {
-        // $this->authorize('delete', $task); // optional if using policies
-        $this->taskService->delete($task);
+        $this->taskService->delete(Auth::user(), $task);
         return response()->json(null, 204);
     }
 }
