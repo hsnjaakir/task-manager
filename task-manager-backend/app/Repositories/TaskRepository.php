@@ -8,12 +8,15 @@ class TaskRepository
 {
     public function getAll()
     {
-        return Task::latest()->get();
+        return Task::with('user:id,name')
+            ->latest()
+            ->get();
     }
 
     public function getByUser($userId)
     {
-        return Task::where('user_id', $userId)
+        return Task::with('user:id,name')
+            ->where('user_id', $userId)
             ->latest()
             ->get();
     }
@@ -21,11 +24,13 @@ class TaskRepository
     public function getForAdmin($adminId)
     {
         return [
-            'my_tasks' => Task::where('user_id', $adminId)
+            'my_tasks' => Task::with('user:id,name')
+                ->where('user_id', $adminId)
                 ->latest()
                 ->get(),
 
-            'other_tasks' => Task::where('user_id', '!=', $adminId)
+            'other_tasks' => Task::with('user:id,name')
+                ->where('user_id', '!=', $adminId)
                 ->latest()
                 ->get(),
         ];
@@ -34,13 +39,13 @@ class TaskRepository
     public function createForUser($userId, array $data)
     {
         $data['user_id'] = $userId;
-        return Task::create($data);
+        return Task::create($data)->load('user:id,name');
     }
 
     public function update(Task $task, array $data)
     {
         $task->update($data);
-        return $task;
+        return $task->load('user:id,name');
     }
 
     public function delete(Task $task)

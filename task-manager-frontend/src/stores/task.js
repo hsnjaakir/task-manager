@@ -46,23 +46,9 @@ export const useTaskStore = defineStore('task', {
       this.loading = true
       this.error = null
       try {
-        const res = await taskService.create(payload)
-        const task = res.data
-
-        // Normal user
-        if (this.tasks.length || (!this.myTasks.length && !this.otherTasks.length)) {
-          this.tasks.unshift(task)
-        }
-        // Admin assigning to self
-        else if (this.myTasks.length && task.user_id === payload.user_id) {
-          this.myTasks.unshift(task)
-        }
-        // Admin assigning to another user
-        else if (this.otherTasks.length && task.user_id !== payload.user_id) {
-          this.otherTasks.unshift(task)
-        }
-
-        return task
+        await taskService.create(payload)
+        // 🔄 Always refresh from backend
+        return await this.fetchTasks()
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to add task'
         throw err
@@ -75,22 +61,9 @@ export const useTaskStore = defineStore('task', {
       this.loading = true
       this.error = null
       try {
-        const res = await taskService.update(id, payload)
-        const updated = res.data
-
-        // Normal user
-        const idx = this.tasks.findIndex((t) => t.id === id)
-        if (idx !== -1) this.tasks.splice(idx, 1, updated)
-
-        // Admin: update myTasks
-        const myIdx = this.myTasks.findIndex((t) => t.id === id)
-        if (myIdx !== -1) this.myTasks.splice(myIdx, 1, updated)
-
-        // Admin: update otherTasks
-        const otherIdx = this.otherTasks.findIndex((t) => t.id === id)
-        if (otherIdx !== -1) this.otherTasks.splice(otherIdx, 1, updated)
-
-        return updated
+        await taskService.update(id, payload)
+        // 🔄 Always refresh
+        return await this.fetchTasks()
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to update task'
         throw err
@@ -104,15 +77,8 @@ export const useTaskStore = defineStore('task', {
       this.error = null
       try {
         await taskService.delete(id)
-
-        // Normal user
-        this.tasks = this.tasks.filter((t) => t.id !== id)
-
-        // Admin: remove from both lists
-        this.myTasks = this.myTasks.filter((t) => t.id !== id)
-        this.otherTasks = this.otherTasks.filter((t) => t.id !== id)
-
-        return true
+        // 🔄 Always refresh
+        return await this.fetchTasks()
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to delete task'
         throw err
