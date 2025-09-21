@@ -134,7 +134,7 @@
               class="flex items-center justify-between bg-gray-100 p-2 rounded"
             >
               <div class="flex items-center gap-3">
-                <button
+                <!-- <button
                   @click="toggleStatus(task)"
                   :disabled="isLoading"
                   class="w-5 h-5 flex items-center justify-center border rounded"
@@ -154,12 +154,21 @@
                       clip-rule="evenodd"
                     />
                   </svg>
-                </button>
+                </button> -->
+                <div class="p-2">
+                  <select
+                    v-model="task.status"
+                    @change="toggleStatus(task)"
+                    class="border rounded p-1 text-sm"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div>
 
                 <div @dblclick="startEdit(task)" class="cursor-pointer">
-                  <span
-                    >{{ task.title }} - <em>{{ task.status }}</em></span
-                  >
+                  <span>{{ task.title }}</span>
                 </div>
               </div>
 
@@ -192,7 +201,7 @@
               class="flex items-center justify-between bg-gray-100 p-2 rounded"
             >
               <div class="flex items-center gap-3">
-                <button
+                <!-- <button
                   @click="toggleStatus(task)"
                   :disabled="isLoading"
                   class="w-5 h-5 flex items-center justify-center border rounded"
@@ -212,12 +221,23 @@
                       clip-rule="evenodd"
                     />
                   </svg>
-                </button>
+                </button> -->
+                <!-- <div class="p-2">
+                  <select
+                    v-model="task.status"
+                    @change="toggleStatus(task)"
+                    class="border rounded p-1 text-sm"
+                  >
+                    <option value="pending">Pending</option>
+                    <option value="in-progress">In Progress</option>
+                    <option value="completed">Completed</option>
+                  </select>
+                </div> -->
 
                 <div @dblclick="startEdit(task)" class="cursor-pointer">
                   <span>
-                    {{ task.title }} - <em>{{ task.status }}</em>
-                    <span class="text-xs text-gray-500">({{ task?.user?.name }})</span>
+                    {{ task?.title }} - <em>{{ task?.user?.name }}</em>
+                    <span class="text-xs text-gray-500"> ({{ task?.status }})</span>
                   </span>
                 </div>
               </div>
@@ -250,7 +270,7 @@
             class="flex items-center justify-between bg-gray-100 p-2 rounded"
           >
             <div class="flex items-center gap-3">
-              <button
+              <!-- <button
                 @click="toggleStatus(task)"
                 :disabled="isLoading"
                 class="w-5 h-5 flex items-center justify-center border rounded"
@@ -270,12 +290,22 @@
                     clip-rule="evenodd"
                   />
                 </svg>
-              </button>
+              </button> -->
+
+              <div class="p-2">
+                <select
+                  v-model="task.status"
+                  @change="toggleStatus(task)"
+                  class="border rounded p-1 text-sm"
+                >
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+              </div>
 
               <div @dblclick="startEdit(task)" class="cursor-pointer">
-                <span
-                  >{{ task.title }} - <em>{{ task.status }}</em></span
-                >
+                <span>{{ task.title }}</span>
               </div>
             </div>
 
@@ -435,10 +465,10 @@ async function addTask() {
 
 // toggle status (pending <-> completed)
 async function toggleStatus(task) {
-  const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+  // const newStatus = task.status === 'completed' ? 'pending' : 'completed'
   try {
-    await taskStore.updateTask(task.id, { status: newStatus })
-    showToast('Task updated', 'success')
+    await taskStore.updateTask(task.id, { status: task.status })
+    showToast('Status updated', 'success')
   } catch (e) {
     showToast(taskStore.error || 'Failed to update task', 'error')
   }
