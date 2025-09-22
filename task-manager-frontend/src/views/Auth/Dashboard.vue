@@ -66,13 +66,48 @@
         <h2 class="text-lg font-semibold text-gray-700 mb-4">Tasks</h2>
 
         <!-- Add Task Form -->
-        <div class="flex flex-col gap-2 mb-4">
-          <input
+        <div class="flex flex-col gap-2 space-y-3">
+          <!-- <input
             v-model="newTaskTitle"
             @keyup.enter="addTask"
             placeholder="Task title"
             class="flex-1 border rounded p-2"
             :disabled="isLoading"
+          /> -->
+
+          <!-- Task Title -->
+          <input
+            v-model="newTaskTitle"
+            type="text"
+            placeholder="Task Title"
+            class="w-full border rounded p-2"
+          />
+
+          <!-- Description -->
+          <textarea
+            v-model="newTaskDescription"
+            placeholder="Task Description"
+            class="w-full border rounded p-2 mt-2"
+          />
+
+          <!-- Priority -->
+          <select v-model="newTaskPriority" class="w-full border rounded p-2 mt-2">
+            <!-- Placeholder option -->
+            <option disabled value="">-- Select Priority --</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+          </select>
+
+          <!-- Due Date -->
+          <label for="dueDate" class="block text-sm font-medium text-gray-700 mb-1">
+            Set Due Date
+          </label>
+          <input
+            id="deuDate"
+            v-model="newTaskDueDate"
+            type="date"
+            class="w-full border rounded p-2 mt-2"
           />
 
           <!-- Only admins can assign tasks -->
@@ -333,7 +368,7 @@
       </div>
     </main>
 
-    <!-- Edit Modal (small inline edit) -->
+    <!-- Edit Modal -->
     <div
       v-if="editingTask"
       class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40"
@@ -344,25 +379,50 @@
         <!-- Title -->
         <input
           v-model="editingTitle"
-          class="w-full p-2 border rounded mb-3"
-          placeholder="Task title"
+          type="text"
+          placeholder="Task Title"
+          class="w-full border rounded p-2 mb-3"
         />
 
-        <!-- Only for Admins: Reassign User -->
+        <!-- Description -->
+        <textarea
+          v-model="editingDescription"
+          placeholder="Task Description"
+          class="w-full border rounded p-2 mb-3"
+        ></textarea>
+
+        <!-- Priority -->
+        <select v-model="editingPriority" class="w-full border rounded p-2 mb-3">
+          <option disabled value="">-- Select Priority --</option>
+          <option value="low">Low</option>
+          <option value="medium">Medium</option>
+          <option value="high">High</option>
+        </select>
+
+        <!-- Due Date -->
+        <label for="editDueDate" class="block text-sm font-medium text-gray-700 mb-1">
+          Set Due Date
+        </label>
+        <input
+          id="editDueDate"
+          v-model="editingDueDate"
+          type="date"
+          class="w-full border rounded p-2 mb-3"
+        />
+
+        <!-- Only Admins: Reassign User -->
         <div v-if="auth.user?.role === 'admin'" class="mb-3">
-          <label class="block text-sm font-medium text-gray-700 mb-1"> Assign to User </label>
-          <select
-            v-if="auth.user?.role === 'admin'"
-            v-model="editingUserId"
-            class="border rounded p-2 w-full"
-          >
+          <label class="block text-sm font-medium text-gray-700 mb-1">Assign to User</label>
+          <select v-model="editingUserId" class="border rounded p-2 w-full">
+            <option disabled value="">-- Select a user --</option>
             <option v-for="user in users" :key="user.id" :value="user.id">
               {{ user.name }}
             </option>
           </select>
         </div>
 
-        <div class="flex justify-end gap-2">
+        <!-- Actions -->
+        <div class="flex justify-end gap-2 mt-4">
           <button @click="cancelEdit" class="px-3 py-1 border rounded">Cancel</button>
           <button
             @click="confirmEdit"
@@ -391,13 +451,15 @@ const userStore = useUserStore()
 const router = useRouter()
 
 // UI state
-const newTaskTitle = ref('')
 const toasts = ref([])
 let toastId = 1
 
 // editing
 const editingTask = ref(null)
 const editingTitle = ref('')
+const editingDescription = ref('')
+const editingPriority = ref('')
+const editingDueDate = ref('')
 
 // computed combined loading flag
 const isLoading = computed(() => !!auth.loading || !!taskStore.loading || !!userStore.loading)
@@ -443,20 +505,33 @@ async function handleLogout() {
   }
 }
 
-// add task
+// new task form fields
+const newTaskTitle = ref('')
+const newTaskDescription = ref('')
+const newTaskPriority = ref('')
+const newTaskDueDate = ref('')
 const assignedUserId = ref('')
 
 async function addTask() {
   const title = newTaskTitle.value.trim()
   if (!title) return
   try {
-    const payload = { title }
+    const payload = {
+      title,
+      description: newTaskDescription.value.trim() || null,
+      priority: newTaskPriority.value,
+      due_date: newTaskDueDate.value || null,
+    }
     if (auth.user?.role === 'admin' && assignedUserId.value) {
       payload.user_id = assignedUserId.value
     }
     await taskStore.addTask(payload)
     showToast('Task added', 'success')
+    // reset form
     newTaskTitle.value = ''
+    newTaskDescription.value = ''
+    newTaskPriority.value = ''
+    newTaskDueDate.value = ''
     assignedUserId.value = ''
   } catch (e) {
     showToast(taskStore.error || 'Failed to add task', 'error')
@@ -497,6 +572,9 @@ const editingUserId = ref(null)
 function startEdit(task) {
   editingTask.value = task
   editingTitle.value = task.title
+  editingDescription.value = task.description
+  editingPriority.value = task.priority
+  editingDueDate.value = task.due_date ? task.due_date.split(' ')[0] : '' // format date
   editingUserId.value = task.user_id
 }
 
@@ -506,9 +584,11 @@ async function confirmEdit() {
   const id = editingTask.value.id
   const payload = {
     title: editingTitle.value.trim(),
+    description: editingDescription.value.trim(),
+    priority: editingPriority.value,
+    due_date: editingDueDate.value || null,
   }
 
-  // include user_id if admin
   if (auth.user?.role === 'admin' && editingUserId.value) {
     payload.user_id = editingUserId.value
   }
@@ -541,7 +621,7 @@ onMounted(async () => {
     try {
       const { data } = await fetchUsers(auth)
       users.value = data
-      console.log(users.value)
+      // console.log(users.value)
     } catch (e) {
       console.error('Failed to fetch users', e)
     }

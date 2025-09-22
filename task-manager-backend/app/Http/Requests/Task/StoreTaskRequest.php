@@ -16,6 +16,7 @@ class StoreTaskRequest extends FormRequest
         $rules = [
             'title'       => 'required|string|max:255',
             'description' => 'nullable|string',
+            'priority'    => 'nullable|in:low,medium,high',
             'status'      => 'nullable|in:pending,in_progress,completed',
             'due_date'    => 'nullable|date',
         ];

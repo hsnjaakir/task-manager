@@ -58,6 +58,7 @@ export const useTaskStore = defineStore('task', {
     },
 
     async updateTask(id, payload) {
+      console.log(id, payload)
       this.loading = true
       this.error = null
       try {

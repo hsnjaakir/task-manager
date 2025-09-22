@@ -17,6 +17,7 @@ class UpdateTaskRequest extends FormRequest
         $rules = [
             'title'       => 'sometimes|string|max:255',
             'description' => 'sometimes|string',
+            'priority'    => 'nullable|in:low,medium,high',
             'status'      => 'sometimes|in:pending,in-progress,completed',
             'due_date'    => 'sometimes|date',
         ];
