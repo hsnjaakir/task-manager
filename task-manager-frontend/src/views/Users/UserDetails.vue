@@ -1,4 +1,4 @@
-<template>hello</template>
+<template>Hello</template>
 <!-- <template>
   <div class="p-6">
     <h2 class="text-2xl font-semibold mb-4">User Details</h2>

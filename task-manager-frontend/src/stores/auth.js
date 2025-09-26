@@ -4,7 +4,7 @@ import { setAuthToken, clearAuthToken } from '../plugins/axios'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
-    user: null,
+    user: JSON.parse(localStorage.getItem('user')) || null,
     token: localStorage.getItem('token') || null,
     loading: false,
     error: null,
@@ -23,7 +23,10 @@ export const useAuthStore = defineStore('auth', {
         const { user, token } = res.data
         this.user = user
         this.token = token
+
         localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+
         setAuthToken(token)
         return res
       } catch (err) {
@@ -42,7 +45,10 @@ export const useAuthStore = defineStore('auth', {
         const { user, token } = res.data
         this.user = user
         this.token = token
+
         localStorage.setItem('token', token)
+        localStorage.setItem('user', JSON.stringify(user))
+
         setAuthToken(token)
         return res
       } catch (err) {
@@ -60,6 +66,9 @@ export const useAuthStore = defineStore('auth', {
       try {
         const res = await authService.me()
         this.user = res.data
+
+        localStorage.setItem('user', JSON.stringify(this.user))
+
         return res
       } catch (err) {
         this.error = 'Failed to fetch user'
@@ -85,14 +94,19 @@ export const useAuthStore = defineStore('auth', {
       this.user = null
       this.token = null
       localStorage.removeItem('token')
+      localStorage.removeItem('user')
       clearAuthToken()
     },
 
     init() {
       const token = localStorage.getItem('token')
+      const user = localStorage.getItem('user')
       if (token) {
         this.token = token
         setAuthToken(token)
+      }
+      if (user) {
+        this.user = JSON.parse(user)
       }
     },
   },
