@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen flex flex-col">
     <!-- Top Navbar -->
-    <header class="bg-white shadow">
+    <header class="bg-indigo-200 shadow">
       <div class="mx-auto px-4 py-4 flex justify-between items-center">
         <!-- User Info -->
         <div v-if="auth.user">
@@ -11,7 +11,7 @@
           <div v-if="auth.error" class="mt-3 text-red-500">{{ auth.error }}</div>
           <div v-if="!auth.user && !auth.loading" class="mt-3 text-gray-500">Not signed in</div>
         </div>
-        <div v-else><h1>Task Manager</h1></div>
+        <div v-else><h1 class="text-black">Task Manager</h1></div>
         <div class="flex gap-6">
           <nav class="flex items-center space-x-4">
             <!-- Dashboard link: hide if current route is /dashboard -->
@@ -46,7 +46,7 @@
     </header>
 
     <!-- Page Content -->
-    <main class="flex-1 p-6">
+    <main class="flex-1">
       <slot />
     </main>
   </div>

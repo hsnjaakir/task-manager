@@ -45,7 +45,7 @@
         </div> -->
 
         <!-- Task Manager -->
-        <div class="bg-white rounded-sm shadow p-6">
+        <div class="bg-white shadow p-6">
           <h2 class="text-lg font-semibold text-gray-700 mb-4">Tasks</h2>
 
           <!-- Add Task Form -->
@@ -94,7 +94,7 @@
                 class="border rounded p-2 w-full"
               >
                 <!-- Placeholder option -->
-                <option disabled value="">-- Select a user --</option>
+                <option disabled value="">-- Select user --</option>
                 <option v-for="user in users" :key="user.id" :value="user.id">
                   {{ user.name }}
                 </option>
@@ -104,9 +104,9 @@
             <button
               @click="addTask"
               :disabled="!newTaskTitle.trim() || isLoading"
-              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50"
+              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 self-center"
             >
-              Add
+              Assign
             </button>
           </div>
 
@@ -313,7 +313,7 @@
           <div v-if="auth.user?.role === 'admin'" class="mb-3">
             <label class="block text-sm font-medium text-gray-700 mb-1">Assign to User</label>
             <select v-model="editingUserId" class="border rounded p-2 w-full">
-              <option disabled value="">-- Select a user --</option>
+              <option disabled value="">-- Select user --</option>
               <option v-for="user in users" :key="user.id" :value="user.id">
                 {{ user.name }}
               </option>
