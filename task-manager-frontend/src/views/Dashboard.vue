@@ -3,26 +3,17 @@
 <template>
   <div class="min-h-screen bg-gray-100 relative">
     <!-- Full-screen Loading Overlay -->
-    <div
-      v-if="isLoading"
-      class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40"
-    >
-      <div
-        class="w-14 h-14 border-4 border-white border-t-blue-400 rounded-full animate-spin"
-      ></div>
+    <div v-if="isLoading" class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
+      <div class="w-14 h-14 border-4 border-white border-t-blue-400 rounded-full animate-spin"></div>
     </div>
 
     <!-- Toasts (top-right) -->
     <div class="fixed top-6 right-6 z-60 space-y-2">
       <transition-group name="toast" tag="div">
-        <div
-          v-for="t in toasts"
-          :key="t.id"
-          :class="[
-            'px-4 py-2 rounded shadow-lg text-sm max-w-xs',
-            t.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white',
-          ]"
-        >
+        <div v-for="t in toasts" :key="t.id" :class="[
+          'px-4 py-2 rounded shadow-lg text-sm max-w-xs',
+          t.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white',
+        ]">
           {{ t.message }}
         </div>
       </transition-group>
@@ -30,105 +21,71 @@
     <AuthenticatedLayout>
       <!-- Main Content -->
       <main class="mx-auto">
-        <!-- User Info -->
-        <!-- <div class="bg-white rounded-2xl shadow p-6">
-          <h2 class="text-lg font-semibold text-gray-700 mb-4">
-            {{ auth.user?.name || 'User' }}
-          </h2>
-          <div v-if="auth.error" class="mt-3 text-red-500">{{ auth.error }}</div>
-          <div v-if="!auth.user && !auth.loading" class="mt-3 text-gray-500">Not signed in</div>
-
-          <div v-if="auth.user && !auth.loading" class="mt-3 space-y-1 text-sm text-gray-700">
-            <p><strong>Name:</strong> {{ auth.user.name }}</p>
-            <p><strong>Email:</strong> {{ auth.user.email }}</p>
-          </div>
-        </div> -->
-
         <!-- Task Manager -->
         <div class="bg-white shadow p-6">
           <h2 class="text-lg font-semibold text-gray-700 mb-4">Tasks</h2>
 
-          <!-- Add Task Form -->
-          <div class="flex flex-col gap-2 space-y-3">
-            <!-- Task Title -->
-            <input
-              v-model="newTaskTitle"
-              type="text"
-              placeholder="Task Title"
-              class="w-full border rounded p-2"
-            />
+          <!-- Task Card -->
+          <div class="bg-white/90 shadow-sm rounded-2xl p-6 border border-gray-100 backdrop-blur-sm">
+            <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
+              Create New Task
+            </h2>
 
-            <!-- Description -->
-            <textarea
-              v-model="newTaskDescription"
-              placeholder="Task Description"
-              class="w-full border rounded p-2 mt-2"
-            />
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input v-model="newTaskTitle" type="text" placeholder="Task Title"
+                class="border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-400 focus:outline-none" />
 
-            <!-- Priority -->
-            <select v-model="newTaskPriority" class="w-full border rounded p-2 mt-2">
-              <!-- Placeholder option -->
-              <option disabled value="">-- Select Priority --</option>
-              <option value="low">Low</option>
-              <option value="medium">Medium</option>
-              <option value="high">High</option>
-            </select>
-
-            <!-- Due Date -->
-            <label for="dueDate" class="block text-sm font-medium text-gray-700 mb-1">
-              Deadline
-            </label>
-            <input
-              id="deuDate"
-              v-model="newTaskDueDate"
-              type="date"
-              class="w-full border rounded p-2 mt-2"
-            />
-
-            <!-- Only admins can assign tasks -->
-            <div v-if="auth.user?.role === 'admin'" class="mb-3">
-              <label class="block text-sm font-medium text-gray-700 mb-1"> Assign to User </label>
-              <select
-                v-if="auth.user?.role === 'admin'"
-                v-model="assignedUserId"
-                class="border rounded p-2 w-full"
-              >
-                <!-- Placeholder option -->
-                <option disabled value="">-- Select user --</option>
-                <option v-for="user in users" :key="user.id" :value="user.id">
-                  {{ user.name }}
-                </option>
+              <select v-model="newTaskPriority"
+                class="border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                <option disabled value="">-- Select Priority --</option>
+                <option value="low">Low</option>
+                <option value="medium">Medium</option>
+                <option value="high">High</option>
               </select>
+
+              <textarea v-model="newTaskDescription" placeholder="Task Description"
+                class="border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-400 focus:outline-none md:col-span-2" />
+
+              <div>
+                <label class="text-sm font-medium text-gray-600 mb-1 block">Deadline</label>
+                <input v-model="newTaskDueDate" type="date"
+                  class="border border-gray-300 rounded-xl p-2.5 w-full focus:ring-2 focus:ring-blue-400 focus:outline-none" />
+              </div>
+
+              <div v-if="auth.user?.role === 'admin'">
+                <label class="text-sm font-medium text-gray-600 mb-1 block">Assign to User</label>
+                <select v-model="assignedUserId"
+                  class="border border-gray-300 rounded-xl p-2.5 w-full focus:ring-2 focus:ring-blue-400 focus:outline-none">
+                  <option disabled value="">-- Select user --</option>
+                  <option v-for="user in users" :key="user.id" :value="user.id">
+                    {{ user.name }}
+                  </option>
+                </select>
+              </div>
             </div>
 
-            <button
-              @click="addTask"
-              :disabled="!newTaskTitle.trim() || isLoading"
-              class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 disabled:opacity-50 self-center"
-            >
-              Assign
-            </button>
+            <div class="mt-6 flex justify-end">
+              <button @click="addTask" :disabled="!newTaskTitle.trim() || isLoading"
+                class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-xl font-semibold disabled:opacity-50 transition-all">
+                Assign Task
+              </button>
+            </div>
           </div>
 
           <!-- Task List / states -->
-          <div
-            v-if="
-              taskStore.loading &&
-              !taskStore.tasks.length &&
-              !taskStore.myTasks.length &&
-              !taskStore.otherTasks.length
-            "
-            class="text-gray-500"
-          >
+          <div v-if="
+            taskStore.loading &&
+            !taskStore.tasks.length &&
+            !taskStore.myTasks.length &&
+            !taskStore.otherTasks.length
+          " class="text-gray-500">
             Loading tasks…
           </div>
 
-          <div
-            v-else-if="
-              !taskStore.tasks.length && !taskStore.myTasks.length && !taskStore.otherTasks.length
-            "
-            class="text-gray-500"
-          >
+          <div v-else-if="
+            !taskStore.tasks.length && !taskStore.myTasks.length && !taskStore.otherTasks.length
+          " class="text-gray-500">
             No tasks yet.
           </div>
 
@@ -138,18 +95,11 @@
             <!-- My Tasks -->
             <h3 class="font-semibold text-lg mt-4 mb-2">My Tasks</h3>
             <ul v-if="taskStore.myTasks.length" class="flex flex-col gap-2">
-              <li
-                v-for="task in taskStore.myTasks"
-                :key="task.id"
-                class="flex items-center justify-between bg-gray-100 p-2 rounded"
-              >
+              <li v-for="task in taskStore.myTasks" :key="task.id"
+                class="flex items-center justify-between bg-gray-100 p-2 rounded">
                 <div class="flex items-center gap-3">
                   <div class="p-2">
-                    <select
-                      v-model="task.status"
-                      @change="toggleStatus(task)"
-                      class="border rounded p-1 text-sm"
-                    >
+                    <select v-model="task.status" @change="toggleStatus(task)" class="border rounded p-1 text-sm">
                       <option value="pending">Pending</option>
                       <option value="in-progress">In Progress</option>
                       <option value="completed">Completed</option>
@@ -162,18 +112,11 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <button
-                    @click="startEdit(task)"
-                    class="text-sm text-gray-600 hover:text-gray-800"
-                    :disabled="isLoading"
-                  >
+                  <button @click="startEdit(task)" class="text-sm text-gray-600 hover:text-gray-800"
+                    :disabled="isLoading">
                     Edit
                   </button>
-                  <button
-                    @click="removeTask(task.id)"
-                    class="text-red-500 hover:text-red-700"
-                    :disabled="isLoading"
-                  >
+                  <button @click="removeTask(task.id)" class="text-red-500 hover:text-red-700" :disabled="isLoading">
                     Delete
                   </button>
                 </div>
@@ -184,11 +127,8 @@
             <!-- Other Tasks -->
             <h3 class="font-semibold text-lg mt-6 mb-2">Other Users' Tasks</h3>
             <ul v-if="taskStore.otherTasks.length" class="flex flex-col gap-2">
-              <li
-                v-for="task in taskStore.otherTasks"
-                :key="task.id"
-                class="flex items-center justify-between bg-gray-100 p-2 rounded"
-              >
+              <li v-for="task in taskStore.otherTasks" :key="task.id"
+                class="flex items-center justify-between bg-gray-100 p-2 rounded">
                 <div class="flex items-center gap-3">
                   <div @dblclick="startEdit(task)" class="cursor-pointer">
                     <span>
@@ -199,18 +139,11 @@
                 </div>
 
                 <div class="flex items-center gap-2">
-                  <button
-                    @click="startEdit(task)"
-                    class="text-sm text-gray-600 hover:text-gray-800"
-                    :disabled="isLoading"
-                  >
+                  <button @click="startEdit(task)" class="text-sm text-gray-600 hover:text-gray-800"
+                    :disabled="isLoading">
                     Edit
                   </button>
-                  <button
-                    @click="removeTask(task.id)"
-                    class="text-red-500 hover:text-red-700"
-                    :disabled="isLoading"
-                  >
+                  <button @click="removeTask(task.id)" class="text-red-500 hover:text-red-700" :disabled="isLoading">
                     Delete
                   </button>
                 </div>
@@ -220,18 +153,11 @@
           </div>
           <!-- What users to see -->
           <ul v-else class="space-y-2">
-            <li
-              v-for="task in taskStore.tasks"
-              :key="task.id"
-              class="flex items-center justify-between bg-gray-100 p-2 rounded"
-            >
+            <li v-for="task in taskStore.tasks" :key="task.id"
+              class="flex items-center justify-between bg-gray-100 p-2 rounded">
               <div class="flex items-center gap-3">
                 <div class="p-2">
-                  <select
-                    v-model="task.status"
-                    @change="toggleStatus(task)"
-                    class="border rounded p-1 text-sm"
-                  >
+                  <select v-model="task.status" @change="toggleStatus(task)" class="border rounded p-1 text-sm">
                     <option value="pending">Pending</option>
                     <option value="in-progress">In Progress</option>
                     <option value="completed">Completed</option>
@@ -244,18 +170,11 @@
               </div>
 
               <div class="flex items-center gap-2">
-                <button
-                  @click="startEdit(task)"
-                  class="text-sm text-gray-600 hover:text-gray-800"
-                  :disabled="isLoading"
-                >
+                <button @click="startEdit(task)" class="text-sm text-gray-600 hover:text-gray-800"
+                  :disabled="isLoading">
                   Edit
                 </button>
-                <button
-                  @click="removeTask(task.id)"
-                  class="text-red-500 hover:text-red-700"
-                  :disabled="isLoading"
-                >
+                <button @click="removeTask(task.id)" class="text-red-500 hover:text-red-700" :disabled="isLoading">
                   Delete
                 </button>
               </div>
@@ -268,27 +187,16 @@
       </main>
 
       <!-- Edit Modal -->
-      <div
-        v-if="editingTask"
-        class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40"
-      >
+      <div v-if="editingTask" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40">
         <div class="bg-white rounded-lg p-6 w-full max-w-md">
           <h3 class="text-lg font-semibold mb-3">Edit Task</h3>
 
           <!-- Title -->
-          <input
-            v-model="editingTitle"
-            type="text"
-            placeholder="Task Title"
-            class="w-full border rounded p-2 mb-3"
-          />
+          <input v-model="editingTitle" type="text" placeholder="Task Title" class="w-full border rounded p-2 mb-3" />
 
           <!-- Description -->
-          <textarea
-            v-model="editingDescription"
-            placeholder="Task Description"
-            class="w-full border rounded p-2 mb-3"
-          ></textarea>
+          <textarea v-model="editingDescription" placeholder="Task Description"
+            class="w-full border rounded p-2 mb-3"></textarea>
 
           <!-- Priority -->
           <select v-model="editingPriority" class="w-full border rounded p-2 mb-3">
@@ -302,12 +210,7 @@
           <label for="editDueDate" class="block text-sm font-medium text-gray-700 mb-1">
             Deadline
           </label>
-          <input
-            id="editDueDate"
-            v-model="editingDueDate"
-            type="date"
-            class="w-full border rounded p-2 mb-3"
-          />
+          <input id="editDueDate" v-model="editingDueDate" type="date" class="w-full border rounded p-2 mb-3" />
 
           <!-- Only Admins: Reassign User -->
           <div v-if="auth.user?.role === 'admin'" class="mb-3">
@@ -323,11 +226,7 @@
           <!-- Actions -->
           <div class="flex justify-end gap-2 mt-4">
             <button @click="cancelEdit" class="px-3 py-1 border rounded">Cancel</button>
-            <button
-              @click="confirmEdit"
-              :disabled="isLoading"
-              class="px-3 py-1 bg-blue-600 text-white rounded"
-            >
+            <button @click="confirmEdit" :disabled="isLoading" class="px-3 py-1 bg-blue-600 text-white rounded">
               Save
             </button>
           </div>
@@ -504,18 +403,22 @@ onMounted(async () => {
 .toast-leave-active {
   transition: all 0.25s ease;
 }
+
 .toast-enter-from {
   transform: translateY(-8px);
   opacity: 0;
 }
+
 .toast-enter-to {
   transform: translateY(0);
   opacity: 1;
 }
+
 .toast-leave-from {
   transform: translateY(0);
   opacity: 1;
 }
+
 .toast-leave-to {
   transform: translateY(-8px);
   opacity: 0;
