@@ -318,7 +318,7 @@ async function addTask() {
     newTaskDueDate.value = ''
     assignedUserId.value = ''
   } catch (e) {
-    showToast(taskStore.error || 'Failed to add task', 'error')
+    showToast(taskStore.error || 'Failed to add task', e)
   }
 }
 
@@ -329,7 +329,7 @@ async function toggleStatus(task) {
     await taskStore.updateTask(task.id, { status: task.status })
     showToast('Status updated', 'success')
   } catch (e) {
-    showToast(taskStore.error || 'Failed to update task', 'error')
+    showToast(taskStore.error || 'Failed to update task', e)
   }
 }
 
@@ -340,7 +340,7 @@ async function removeTask(id) {
     await taskStore.deleteTask(id)
     showToast('Task deleted', 'success')
   } catch (e) {
-    showToast(taskStore.error || 'Failed to delete task', 'error')
+    showToast(taskStore.error || 'Failed to delete task', e)
   }
 }
 
@@ -382,7 +382,7 @@ async function confirmEdit() {
     showToast('Task saved', 'success')
     cancelEdit()
   } catch (e) {
-    showToast(taskStore.error || 'Failed to save task', 'error')
+    showToast(taskStore.error || 'Failed to save task', e)
   }
 }
 
@@ -393,6 +393,7 @@ onMounted(async () => {
     try {
       await auth.fetchUser()
     } catch (e) {
+      console.log(e);
       auth.localLogout()
       router.push('/login')
       return
