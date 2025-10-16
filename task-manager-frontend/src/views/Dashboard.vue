@@ -137,7 +137,7 @@
           <div v-if="auth.user?.role === 'admin'">
             <!-- My Tasks -->
             <h3 class="font-semibold text-lg mt-4 mb-2">My Tasks</h3>
-            <ul v-if="taskStore.myTasks.length" class="space-y-2">
+            <ul v-if="taskStore.myTasks.length" class="flex flex-col gap-2">
               <li
                 v-for="task in taskStore.myTasks"
                 :key="task.id"
@@ -183,7 +183,7 @@
 
             <!-- Other Tasks -->
             <h3 class="font-semibold text-lg mt-6 mb-2">Other Users' Tasks</h3>
-            <ul v-if="taskStore.otherTasks.length" class="space-y-2">
+            <ul v-if="taskStore.otherTasks.length" class="flex flex-col gap-2">
               <li
                 v-for="task in taskStore.otherTasks"
                 :key="task.id"

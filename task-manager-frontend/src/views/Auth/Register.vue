@@ -2,11 +2,11 @@
 <template>
   <AuthenticatedLayout>
     <div class="min-h-screen flex items-center justify-center bg-gray-100">
-      <div class="w-full max-w-md bg-white p-8 rounded-xl shadow-md">
+      <div class="w-full flex flex-col gap-2 max-w-md bg-white p-8 rounded-xl shadow-md">
         <h2 class="text-2xl font-bold text-center mb-6">Register</h2>
 
-        <form class="flex flex-col" @submit.prevent="handleRegister">
-          <div>
+        <form class="flex flex-col gap-2" @submit.prevent="handleRegister">
+          <div class="flex flex-col gap-2">
             <input
               v-model="form.name"
               type="text"
@@ -22,7 +22,7 @@
             />
           </div>
 
-          <div>
+          <div class="flex flex-col gap-2">
             <input
               v-model="form.password"
               type="password"
