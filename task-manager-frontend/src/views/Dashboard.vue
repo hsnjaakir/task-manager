@@ -73,108 +73,121 @@
             </div>
           </div>
 
-          <!-- Task List / states -->
+          <!-- Task List / States -->
           <div v-if="
             taskStore.loading &&
             !taskStore.tasks.length &&
             !taskStore.myTasks.length &&
             !taskStore.otherTasks.length
-          " class="text-gray-500">
+          " class="text-gray-500 text-center py-6 italic">
             Loading tasks…
           </div>
 
           <div v-else-if="
             !taskStore.tasks.length && !taskStore.myTasks.length && !taskStore.otherTasks.length
-          " class="text-gray-500">
+          " class="text-gray-500 text-center py-6 italic">
             No tasks yet.
           </div>
 
-          <!-- Normal user -->
-          <!-- What admin to see -->
+          <!-- Admin View -->
           <div v-if="auth.user?.role === 'admin'">
             <!-- My Tasks -->
-            <h3 class="font-semibold text-lg mt-4 mb-2">My Tasks</h3>
-            <ul v-if="taskStore.myTasks.length" class="flex flex-col gap-2">
+            <h3 class="font-semibold text-lg text-gray-800 mt-6 mb-3 flex items-center gap-2">
+              <span class="w-2 h-2 bg-blue-500 rounded-full"></span> My Tasks
+            </h3>
+
+            <ul v-if="taskStore.myTasks.length"
+              class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
               <li v-for="task in taskStore.myTasks" :key="task.id"
-                class="flex items-center justify-between bg-gray-100 p-2 rounded">
+                class="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-xl px-4 py-3 transition-all">
                 <div class="flex items-center gap-3">
-                  <div class="p-2">
-                    <select v-model="task.status" @change="toggleStatus(task)" class="border rounded p-1 text-sm">
-                      <option value="pending">Pending</option>
-                      <option value="in-progress">In Progress</option>
-                      <option value="completed">Completed</option>
-                    </select>
-                  </div>
-
-                  <div @dblclick="startEdit(task)" class="cursor-pointer">
-                    <span>{{ task.title }}</span>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <button @click="startEdit(task)" class="text-sm text-gray-600 hover:text-gray-800"
-                    :disabled="isLoading">
-                    Edit
-                  </button>
-                  <button @click="removeTask(task.id)" class="text-red-500 hover:text-red-700" :disabled="isLoading">
-                    Delete
-                  </button>
-                </div>
-              </li>
-            </ul>
-            <div v-else class="text-gray-500">No tasks assigned to you.</div>
-
-            <!-- Other Tasks -->
-            <h3 class="font-semibold text-lg mt-6 mb-2">Other Users' Tasks</h3>
-            <ul v-if="taskStore.otherTasks.length" class="flex flex-col gap-2">
-              <li v-for="task in taskStore.otherTasks" :key="task.id"
-                class="flex items-center justify-between bg-gray-100 p-2 rounded">
-                <div class="flex items-center gap-3">
-                  <div @dblclick="startEdit(task)" class="cursor-pointer">
-                    <span>
-                      {{ task?.title }} - <em>{{ task?.user?.name }}</em>
-                      <span class="text-xs text-gray-500"> ({{ task?.status }})</span>
-                    </span>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-2">
-                  <button @click="startEdit(task)" class="text-sm text-gray-600 hover:text-gray-800"
-                    :disabled="isLoading">
-                    Edit
-                  </button>
-                  <button @click="removeTask(task.id)" class="text-red-500 hover:text-red-700" :disabled="isLoading">
-                    Delete
-                  </button>
-                </div>
-              </li>
-            </ul>
-            <div v-else class="text-gray-500">No tasks for other users.</div>
-          </div>
-          <!-- What users to see -->
-          <ul v-else class="space-y-2">
-            <li v-for="task in taskStore.tasks" :key="task.id"
-              class="flex items-center justify-between bg-gray-100 p-2 rounded">
-              <div class="flex items-center gap-3">
-                <div class="p-2">
-                  <select v-model="task.status" @change="toggleStatus(task)" class="border rounded p-1 text-sm">
+                  <select v-model="task.status" @change="toggleStatus(task)"
+                    class="border border-gray-300 rounded-lg p-1 text-sm focus:ring-1 focus:ring-blue-400 focus:outline-none bg-white">
                     <option value="pending">Pending</option>
                     <option value="in-progress">In Progress</option>
                     <option value="completed">Completed</option>
                   </select>
+
+                  <div @dblclick="startEdit(task)" class="cursor-pointer">
+                    <span class="font-medium text-gray-700">{{ task.title }}</span>
+                  </div>
                 </div>
 
+                <div class="flex items-center gap-3">
+                  <button @click="startEdit(task)"
+                    class="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
+                    :disabled="isLoading">
+                    Edit
+                  </button>
+                  <button @click="removeTask(task.id)"
+                    class="text-rose-500 hover:text-rose-700 text-sm font-medium disabled:opacity-50"
+                    :disabled="isLoading">
+                    Delete
+                  </button>
+                </div>
+              </li>
+            </ul>
+            <div v-else class="text-gray-500 text-center py-4 italic">No tasks assigned to you.</div>
+
+            <!-- Other Users' Tasks -->
+            <h3 class="font-semibold text-lg text-gray-800 mt-8 mb-3 flex items-center gap-2">
+              <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Other Users’ Tasks
+            </h3>
+
+            <ul v-if="taskStore.otherTasks.length"
+              class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
+              <li v-for="task in taskStore.otherTasks" :key="task.id"
+                class="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-xl px-4 py-3 transition-all">
+                <div>
+                  <span class="font-medium text-gray-700">{{ task.title }}</span>
+                  <span class="text-sm text-gray-500">
+                    — <em>{{ task.user?.name }}</em> ({{ task.status }})
+                  </span>
+                </div>
+
+                <div class="flex items-center gap-3">
+                  <button @click="startEdit(task)"
+                    class="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
+                    :disabled="isLoading">
+                    Edit
+                  </button>
+                  <button @click="removeTask(task.id)"
+                    class="text-rose-500 hover:text-rose-700 text-sm font-medium disabled:opacity-50"
+                    :disabled="isLoading">
+                    Delete
+                  </button>
+                </div>
+              </li>
+            </ul>
+            <div v-else class="text-gray-500 text-center py-4 italic">No tasks for other users.</div>
+          </div>
+
+          <!-- Regular User View -->
+          <ul v-else class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
+            <li v-for="task in taskStore.tasks" :key="task.id"
+              class="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-xl px-4 py-3 transition-all">
+              <div class="flex items-center gap-3">
+                <select v-model="task.status" @change="toggleStatus(task)"
+                  class="border border-gray-300 rounded-lg p-1 text-sm focus:ring-1 focus:ring-blue-400 focus:outline-none bg-white">
+                  <option value="pending">Pending</option>
+                  <option value="in-progress">In Progress</option>
+                  <option value="completed">Completed</option>
+                </select>
+
                 <div @dblclick="startEdit(task)" class="cursor-pointer">
-                  <span>{{ task.title }}</span>
+                  <span class="font-medium text-gray-700">{{ task.title }}</span>
                 </div>
               </div>
 
-              <div class="flex items-center gap-2">
-                <button @click="startEdit(task)" class="text-sm text-gray-600 hover:text-gray-800"
+              <div class="flex items-center gap-3">
+                <button @click="startEdit(task)"
+                  class="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
                   :disabled="isLoading">
                   Edit
                 </button>
-                <button @click="removeTask(task.id)" class="text-red-500 hover:text-red-700" :disabled="isLoading">
+                <button @click="removeTask(task.id)"
+                  class="text-rose-500 hover:text-rose-700 text-sm font-medium disabled:opacity-50"
+                  :disabled="isLoading">
                   Delete
                 </button>
               </div>
@@ -182,7 +195,10 @@
           </ul>
 
           <!-- Error -->
-          <div v-if="taskStore.error" class="text-red-500 mt-2">{{ taskStore.error }}</div>
+          <div v-if="taskStore.error" class="text-rose-600 mt-3 text-center font-medium">
+            {{ taskStore.error }}
+          </div>
+
         </div>
       </main>
 
