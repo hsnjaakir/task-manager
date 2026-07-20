@@ -1,249 +1,407 @@
 <!-- eslint-disable vue/multi-word-component-names -->
-<!-- eslint-disable no-unused-vars -->
 <template>
-  <div class="min-h-screen bg-gray-100 relative">
-    <!-- Full-screen Loading Overlay -->
-    <div v-if="isLoading" class="fixed inset-0 z-50 flex items-center justify-center bg-white bg-opacity-40">
-      <div class="w-14 h-14 border-4 border-white border-t-blue-400 rounded-full animate-spin"></div>
+  <div class="relative">
+    <!-- Full-screen loading overlay -->
+    <div v-if="isLoading" class="fixed inset-0 z-50 flex items-center justify-center bg-canvas/60 backdrop-blur-[2px]">
+      <div class="w-12 h-12 border-[3px] border-ink-950/10 border-t-brand-500 rounded-full animate-spin"></div>
     </div>
 
-    <!-- Toasts (top-right) -->
-    <div class="fixed top-6 right-6 z-60 space-y-2">
-      <transition-group name="toast" tag="div">
-        <div v-for="t in toasts" :key="t.id" :class="[
-          'px-4 py-2 rounded shadow-lg text-sm max-w-xs',
-          t.type === 'success' ? 'bg-green-500 text-white' : 'bg-red-500 text-white',
-        ]">
+    <!-- Toasts -->
+    <div class="fixed top-20 right-4 sm:right-6 z-[60] space-y-2" aria-live="polite">
+      <transition-group name="toast" tag="div" class="space-y-2">
+        <div
+          v-for="t in toasts"
+          :key="t.id"
+          class="flex items-center gap-2.5 bg-ink-950 text-white text-sm rounded-xl pl-3.5 pr-4 py-2.5 shadow-[0_8px_24px_rgba(11,17,32,0.35)] max-w-xs"
+        >
+          <span class="w-2 h-2 rounded-full shrink-0" :class="t.type === 'success' ? 'bg-emerald-400' : 'bg-rose-400'"></span>
           {{ t.message }}
         </div>
       </transition-group>
     </div>
+
     <AuthenticatedLayout>
-      <!-- Main Content -->
-      <main class="mx-auto">
-        <!-- Task Manager -->
-        <div class="bg-white shadow p-6">
-          <h2 class="text-lg font-semibold text-gray-700 mb-4">Tasks</h2>
+      <!-- ============ Header: greeting + momentum ring ============ -->
+      <section class="bg-ink-950 text-white rounded-2xl px-6 sm:px-8 py-6 sm:py-7 flex items-center justify-between gap-6 overflow-hidden relative">
+        <div
+          class="absolute inset-0 opacity-[0.05] pointer-events-none"
+          style="background-image: linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px); background-size: 40px 40px;"
+          aria-hidden="true"
+        ></div>
 
-          <!-- Task Card -->
-          <div class="bg-white/90 shadow-sm rounded-2xl p-6 border border-gray-100 backdrop-blur-sm">
-            <h2 class="text-lg font-semibold text-gray-700 mb-4 flex items-center gap-2">
-              <span class="w-2 h-2 bg-blue-500 rounded-full"></span>
-              Create New Task
-            </h2>
+        <div class="relative min-w-0">
+          <p class="text-xs uppercase tracking-widest text-ink-400">{{ todayLabel }}</p>
+          <h1 class="font-display text-2xl sm:text-[1.7rem] font-semibold tracking-tight mt-1 truncate">
+            {{ greeting }}, {{ firstName }}
+          </h1>
+          <p class="text-sm text-ink-400 mt-1.5">
+            <template v-if="stats.total">
+              {{ stats.completed }} of {{ stats.total }} tasks done — {{ momentumLine }}
+            </template>
+            <template v-else-if="filtersActive">No tasks match the current filters.</template>
+            <template v-else>A clear slate. Add your first task below.</template>
+          </p>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input v-model="newTaskTitle" type="text" placeholder="Task Title"
-                class="border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-400 focus:outline-none" />
-
-              <select v-model="newTaskPriority"
-                class="border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-400 focus:outline-none">
-                <option disabled value="">-- Select Priority --</option>
-                <option value="low">Low</option>
-                <option value="medium">Medium</option>
-                <option value="high">High</option>
-              </select>
-
-              <textarea v-model="newTaskDescription" placeholder="Task Description"
-                class="border border-gray-300 rounded-xl p-2.5 focus:ring-2 focus:ring-blue-400 focus:outline-none md:col-span-2" />
-
-              <div>
-                <label class="text-sm font-medium text-gray-600 mb-1 block">Deadline</label>
-                <input v-model="newTaskDueDate" type="date"
-                  class="border border-gray-300 rounded-xl p-2.5 w-full focus:ring-2 focus:ring-blue-400 focus:outline-none" />
-              </div>
-
-              <div v-if="auth.user?.role === 'admin'">
-                <label class="text-sm font-medium text-gray-600 mb-1 block">Assign to User</label>
-                <select v-model="assignedUserId"
-                  class="border border-gray-300 rounded-xl p-2.5 w-full focus:ring-2 focus:ring-blue-400 focus:outline-none">
-                  <option disabled value="">-- Select user --</option>
-                  <option v-for="user in users" :key="user.id" :value="user.id">
-                    {{ user.name }}
-                  </option>
-                </select>
-              </div>
-            </div>
-
-            <div class="mt-6 flex justify-end">
-              <button @click="addTask" :disabled="!newTaskTitle.trim() || isLoading"
-                class="bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-xl font-semibold disabled:opacity-50 transition-all">
-                Assign Task
-              </button>
-            </div>
+          <!-- Stat chips -->
+          <div class="flex flex-wrap gap-2 mt-4">
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium bg-white/8 border border-white/10 rounded-lg px-2.5 py-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-ink-400"></span>{{ stats.pending }} pending
+            </span>
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium bg-white/8 border border-white/10 rounded-lg px-2.5 py-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>{{ stats.inProgress }} in progress
+            </span>
+            <span class="inline-flex items-center gap-1.5 text-xs font-medium bg-white/8 border border-white/10 rounded-lg px-2.5 py-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>{{ stats.completed }} completed
+            </span>
+            <span
+              v-if="stats.overdue"
+              class="inline-flex items-center gap-1.5 text-xs font-medium bg-rose-500/15 border border-rose-400/30 text-rose-200 rounded-lg px-2.5 py-1.5"
+            >
+              <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>{{ stats.overdue }} overdue
+            </span>
           </div>
-
-          <!-- Task List / States -->
-          <div v-if="
-            taskStore.loading &&
-            !taskStore.tasks.length &&
-            !taskStore.myTasks.length &&
-            !taskStore.otherTasks.length
-          " class="text-gray-500 text-center py-6 italic">
-            Loading tasks…
-          </div>
-
-          <div v-else-if="
-            !taskStore.tasks.length && !taskStore.myTasks.length && !taskStore.otherTasks.length
-          " class="text-gray-500 text-center py-6 italic">
-            No tasks yet.
-          </div>
-
-          <!-- Admin View -->
-          <div v-if="auth.user?.role === 'admin'">
-            <!-- My Tasks -->
-            <h3 class="font-semibold text-lg text-gray-800 mt-6 mb-3 flex items-center gap-2">
-              <span class="w-2 h-2 bg-blue-500 rounded-full"></span> My Tasks
-            </h3>
-
-            <ul v-if="taskStore.myTasks.length"
-              class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
-              <li v-for="task in taskStore.myTasks" :key="task.id"
-                class="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-xl px-4 py-3 transition-all">
-                <div class="flex items-center gap-3">
-                  <select v-model="task.status" @change="toggleStatus(task)"
-                    class="border border-gray-300 rounded-lg p-1 text-sm focus:ring-1 focus:ring-blue-400 focus:outline-none bg-white">
-                    <option value="pending">Pending</option>
-                    <option value="in-progress">In Progress</option>
-                    <option value="completed">Completed</option>
-                  </select>
-
-                  <div @dblclick="startEdit(task)" class="cursor-pointer">
-                    <span class="font-medium text-gray-700">{{ task.title }}</span>
-                  </div>
-                </div>
-
-                <div class="flex items-center gap-3">
-                  <button @click="startEdit(task)"
-                    class="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
-                    :disabled="isLoading">
-                    Edit
-                  </button>
-                  <button @click="removeTask(task.id)"
-                    class="text-rose-500 hover:text-rose-700 text-sm font-medium disabled:opacity-50"
-                    :disabled="isLoading">
-                    Delete
-                  </button>
-                </div>
-              </li>
-            </ul>
-            <div v-else class="text-gray-500 text-center py-4 italic">No tasks assigned to you.</div>
-
-            <!-- Other Users' Tasks -->
-            <h3 class="font-semibold text-lg text-gray-800 mt-8 mb-3 flex items-center gap-2">
-              <span class="w-2 h-2 bg-indigo-500 rounded-full"></span> Other Users’ Tasks
-            </h3>
-
-            <ul v-if="taskStore.otherTasks.length"
-              class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
-              <li v-for="task in taskStore.otherTasks" :key="task.id"
-                class="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-xl px-4 py-3 transition-all">
-                <div>
-                  <span class="font-medium text-gray-700">{{ task.title }}</span>
-                  <span class="text-sm text-gray-500">
-                    — <em>{{ task.user?.name }}</em> ({{ task.status }})
-                  </span>
-                </div>
-
-                <div class="flex items-center gap-3">
-                  <button @click="startEdit(task)"
-                    class="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
-                    :disabled="isLoading">
-                    Edit
-                  </button>
-                  <button @click="removeTask(task.id)"
-                    class="text-rose-500 hover:text-rose-700 text-sm font-medium disabled:opacity-50"
-                    :disabled="isLoading">
-                    Delete
-                  </button>
-                </div>
-              </li>
-            </ul>
-            <div v-else class="text-gray-500 text-center py-4 italic">No tasks for other users.</div>
-          </div>
-
-          <!-- Regular User View -->
-          <ul v-else class="bg-white/80 backdrop-blur-sm border border-gray-100 rounded-2xl p-4 shadow-sm flex flex-col gap-1">
-            <li v-for="task in taskStore.tasks" :key="task.id"
-              class="flex items-center justify-between bg-slate-50 hover:bg-slate-100 rounded-xl px-4 py-3 transition-all">
-              <div class="flex items-center gap-3">
-                <select v-model="task.status" @change="toggleStatus(task)"
-                  class="border border-gray-300 rounded-lg p-1 text-sm focus:ring-1 focus:ring-blue-400 focus:outline-none bg-white">
-                  <option value="pending">Pending</option>
-                  <option value="in-progress">In Progress</option>
-                  <option value="completed">Completed</option>
-                </select>
-
-                <div @dblclick="startEdit(task)" class="cursor-pointer">
-                  <span class="font-medium text-gray-700">{{ task.title }}</span>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-3">
-                <button @click="startEdit(task)"
-                  class="text-blue-600 hover:text-blue-800 text-sm font-medium disabled:opacity-50"
-                  :disabled="isLoading">
-                  Edit
-                </button>
-                <button @click="removeTask(task.id)"
-                  class="text-rose-500 hover:text-rose-700 text-sm font-medium disabled:opacity-50"
-                  :disabled="isLoading">
-                  Delete
-                </button>
-              </div>
-            </li>
-          </ul>
-
-          <!-- Error -->
-          <div v-if="taskStore.error" class="text-rose-600 mt-3 text-center font-medium">
-            {{ taskStore.error }}
-          </div>
-
         </div>
-      </main>
 
-      <!-- Edit Modal -->
-      <div v-if="editingTask" class="fixed inset-0 z-60 flex items-center justify-center bg-black bg-opacity-40">
-        <div class="bg-white rounded-lg p-6 w-full max-w-md">
-          <h3 class="text-lg font-semibold mb-3">Edit Task</h3>
+        <!-- Completion ring -->
+        <div class="relative shrink-0 hidden sm:block" role="img" :aria-label="`${completionPct}% of tasks completed`">
+          <svg viewBox="0 0 120 120" class="w-28 h-28 -rotate-90">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="10" />
+            <circle
+              cx="60" cy="60" r="52" fill="none"
+              stroke="url(#ringGrad)" stroke-width="10" stroke-linecap="round"
+              :stroke-dasharray="ringCircumference"
+              :stroke-dashoffset="ringOffset"
+              style="transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1)"
+            />
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#5f78ee" />
+                <stop offset="100%" stop-color="#34d399" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="absolute inset-0 grid place-items-center rotate-0">
+            <div class="text-center">
+              <p class="font-display text-2xl font-semibold leading-none">{{ completionPct }}<span class="text-sm">%</span></p>
+              <p class="text-[10px] uppercase tracking-widest text-ink-400 mt-1">done</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-          <!-- Title -->
-          <input v-model="editingTitle" type="text" placeholder="Task Title" class="w-full border rounded p-2 mb-3" />
+      <!-- ============ Composer ============ -->
+      <section class="mt-6 bg-white rounded-2xl border border-ink-950/8 shadow-[0_1px_2px_rgba(11,17,32,0.05)] p-5 sm:p-6">
+        <h2 class="font-display text-base font-semibold tracking-tight flex items-center gap-2">
+          <span class="grid place-items-center w-6 h-6 rounded-lg bg-brand-50 text-brand-600">
+            <svg viewBox="0 0 14 14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>
+          </span>
+          Create a task
+        </h2>
 
-          <!-- Description -->
-          <textarea v-model="editingDescription" placeholder="Task Description"
-            class="w-full border rounded p-2 mb-3"></textarea>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+          <div>
+            <label for="newTitle" class="block text-sm font-medium text-ink-800 mb-1.5">Title</label>
+            <input
+              id="newTitle"
+              v-model="newTaskTitle"
+              type="text"
+              placeholder="What needs doing?"
+              class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm placeholder:text-ink-400/70 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition"
+            />
+          </div>
 
-          <!-- Priority -->
-          <select v-model="editingPriority" class="w-full border rounded p-2 mb-3">
-            <option disabled value="">-- Select Priority --</option>
-            <option value="low">Low</option>
-            <option value="medium">Medium</option>
-            <option value="high">High</option>
-          </select>
+          <div>
+            <label for="newPriority" class="block text-sm font-medium text-ink-800 mb-1.5">Priority</label>
+            <select
+              id="newPriority"
+              v-model="newTaskPriority"
+              class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+            >
+              <option disabled value="">Choose a priority</option>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+            </select>
+          </div>
 
-          <!-- Due Date -->
-          <label for="editDueDate" class="block text-sm font-medium text-gray-700 mb-1">
-            Deadline
-          </label>
-          <input id="editDueDate" v-model="editingDueDate" type="date" class="w-full border rounded p-2 mb-3" />
+          <div class="md:col-span-2">
+            <label for="newDescription" class="block text-sm font-medium text-ink-800 mb-1.5">
+              Description <span class="text-ink-400 font-normal">(optional)</span>
+            </label>
+            <textarea
+              id="newDescription"
+              v-model="newTaskDescription"
+              rows="2"
+              placeholder="Any details worth noting"
+              class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm placeholder:text-ink-400/70 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition resize-y"
+            />
+          </div>
 
-          <!-- Only Admins: Reassign User -->
-          <div v-if="auth.user?.role === 'admin'" class="mb-3">
-            <label class="block text-sm font-medium text-gray-700 mb-1">Assign to User</label>
-            <select v-model="editingUserId" class="border rounded p-2 w-full">
-              <option disabled value="">-- Select user --</option>
+          <div>
+            <label for="newDueDate" class="block text-sm font-medium text-ink-800 mb-1.5">Deadline</label>
+            <input
+              id="newDueDate"
+              v-model="newTaskDueDate"
+              type="date"
+              class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+            />
+          </div>
+
+          <div v-if="auth.user?.role === 'admin'">
+            <label for="newAssignee" class="block text-sm font-medium text-ink-800 mb-1.5">Assign to</label>
+            <select
+              id="newAssignee"
+              v-model="assignedUserId"
+              class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+            >
+              <option disabled value="">Choose a teammate</option>
               <option v-for="user in users" :key="user.id" :value="user.id">
                 {{ user.name }}
               </option>
             </select>
           </div>
+        </div>
 
-          <!-- Actions -->
-          <div class="flex justify-end gap-2 mt-4">
-            <button @click="cancelEdit" class="px-3 py-1 border rounded">Cancel</button>
-            <button @click="confirmEdit" :disabled="isLoading" class="px-3 py-1 bg-blue-600 text-white rounded">
-              Save
+        <div class="mt-5 flex justify-end">
+          <button
+            @click="addTask"
+            :disabled="!newTaskTitle.trim() || isLoading"
+            class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-5 py-2.5 rounded-xl shadow-[0_2px_10px_rgba(39,67,211,0.35)] disabled:opacity-50 disabled:shadow-none transition-all"
+          >
+            <svg viewBox="0 0 14 14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>
+            Add task
+          </button>
+        </div>
+      </section>
+
+      <!-- ============ Toolbar: search, filters, sort, view ============ -->
+      <section class="mt-6">
+        <TaskFilters
+          :search="ui.search"
+          :status="ui.status"
+          :priority="ui.priority"
+          :sort="ui.sort"
+          :view="view"
+          @update:search="(v) => applyFilter('search', v)"
+          @update:status="(v) => applyFilter('status', v)"
+          @update:priority="(v) => applyFilter('priority', v)"
+          @update:sort="(v) => applyFilter('sort', v)"
+          @update:view="setView"
+        />
+      </section>
+
+      <!-- ============ Tasks ============ -->
+      <div v-if="taskStore.loading && !stats.total" class="text-ink-400 text-center py-10 text-sm">
+        Loading tasks…
+      </div>
+
+      <div v-else-if="!stats.total" class="mt-6 bg-white rounded-2xl border border-dashed border-ink-950/15 py-12 text-center">
+        <div class="mx-auto w-11 h-11 grid place-items-center rounded-xl bg-brand-50 text-brand-600 mb-3">
+          <svg viewBox="0 0 20 20" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg>
+        </div>
+        <template v-if="filtersActive">
+          <p class="font-medium text-ink-950 text-sm">No tasks match your filters</p>
+          <button @click="clearFilters" class="text-brand-600 hover:text-brand-700 text-sm font-medium mt-1 rounded">
+            Clear filters
+          </button>
+        </template>
+        <template v-else>
+          <p class="font-medium text-ink-950 text-sm">No tasks yet</p>
+          <p class="text-ink-400 text-sm mt-1">Add your first task above to get started.</p>
+        </template>
+      </div>
+
+      <!-- ===== Board view ===== -->
+      <template v-else-if="view === 'board'">
+        <template v-if="auth.user?.role === 'admin'">
+          <section class="mt-6">
+            <div class="flex items-center gap-2.5 mb-3">
+              <h3 class="font-display text-base font-semibold tracking-tight">My tasks</h3>
+              <span class="text-xs font-medium text-brand-700 bg-brand-50 rounded-full px-2 py-0.5">{{ taskStore.myTasks.length }}</span>
+            </div>
+            <TaskBoard
+              :tasks="taskStore.myTasks"
+              :disabled="isLoading"
+              @edit="startEdit"
+              @status-change="changeStatus"
+            />
+          </section>
+
+          <section class="mt-8">
+            <div class="flex items-center gap-2.5 mb-3">
+              <h3 class="font-display text-base font-semibold tracking-tight">Team tasks</h3>
+              <span class="text-xs font-medium text-brand-700 bg-brand-50 rounded-full px-2 py-0.5">{{ taskStore.otherTasks.length }}</span>
+            </div>
+            <TaskBoard
+              :tasks="taskStore.otherTasks"
+              show-assignee
+              :disabled="isLoading"
+              @edit="startEdit"
+              @status-change="changeStatus"
+            />
+          </section>
+        </template>
+
+        <section v-else class="mt-6">
+          <TaskBoard
+            :tasks="taskStore.tasks"
+            :disabled="isLoading"
+            @edit="startEdit"
+            @status-change="changeStatus"
+          />
+        </section>
+      </template>
+
+      <!-- ===== List view ===== -->
+      <template v-else>
+        <template v-if="auth.user?.role === 'admin'">
+          <section class="mt-6">
+            <div class="flex items-center gap-2.5 mb-3">
+              <h3 class="font-display text-base font-semibold tracking-tight">My tasks</h3>
+              <span class="text-xs font-medium text-brand-700 bg-brand-50 rounded-full px-2 py-0.5">{{ taskStore.myTasks.length }}</span>
+            </div>
+            <ul v-if="taskStore.myTasks.length" class="space-y-2">
+              <TaskCard
+                v-for="task in taskStore.myTasks"
+                :key="task.id"
+                :task="task"
+                :disabled="isLoading"
+                @edit="startEdit(task)"
+                @delete="removeTask(task.id)"
+                @status-change="(s) => changeStatus(task, s)"
+              />
+            </ul>
+            <p v-else class="text-ink-400 text-sm bg-white border border-dashed border-ink-950/15 rounded-xl py-5 text-center">
+              {{ filtersActive ? 'No matching tasks in this section.' : 'Nothing assigned to you right now.' }}
+            </p>
+          </section>
+
+          <section class="mt-8">
+            <div class="flex items-center gap-2.5 mb-3">
+              <h3 class="font-display text-base font-semibold tracking-tight">Team tasks</h3>
+              <span class="text-xs font-medium text-brand-700 bg-brand-50 rounded-full px-2 py-0.5">{{ taskStore.otherTasks.length }}</span>
+            </div>
+            <ul v-if="taskStore.otherTasks.length" class="space-y-2">
+              <TaskCard
+                v-for="task in taskStore.otherTasks"
+                :key="task.id"
+                :task="task"
+                show-assignee
+                :disabled="isLoading"
+                @edit="startEdit(task)"
+                @delete="removeTask(task.id)"
+                @status-change="(s) => changeStatus(task, s)"
+              />
+            </ul>
+            <p v-else class="text-ink-400 text-sm bg-white border border-dashed border-ink-950/15 rounded-xl py-5 text-center">
+              {{ filtersActive ? 'No matching tasks in this section.' : 'No tasks assigned to teammates yet.' }}
+            </p>
+          </section>
+        </template>
+
+        <section v-else class="mt-6">
+          <ul class="space-y-2">
+            <TaskCard
+              v-for="task in taskStore.tasks"
+              :key="task.id"
+              :task="task"
+              :disabled="isLoading"
+              @edit="startEdit(task)"
+              @delete="removeTask(task.id)"
+              @status-change="(s) => changeStatus(task, s)"
+            />
+          </ul>
+        </section>
+      </template>
+
+      <!-- Error -->
+      <p v-if="taskStore.error" class="mt-4 text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-3.5 py-2.5 text-center">
+        {{ taskStore.error }}
+      </p>
+
+      <!-- ============ Edit modal ============ -->
+      <div
+        v-if="editingTask"
+        class="fixed inset-0 z-[55] flex items-center justify-center bg-ink-950/50 backdrop-blur-[2px] p-4"
+        @click.self="cancelEdit"
+      >
+        <div class="bg-white rounded-2xl shadow-[0_24px_60px_rgba(11,17,32,0.35)] p-6 w-full max-w-md" role="dialog" aria-modal="true" aria-label="Edit task">
+          <h3 class="font-display text-lg font-semibold tracking-tight mb-5">Edit task</h3>
+
+          <div class="space-y-4">
+            <div>
+              <label for="editTitle" class="block text-sm font-medium text-ink-800 mb-1.5">Title</label>
+              <input
+                id="editTitle"
+                v-model="editingTitle"
+                type="text"
+                class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition"
+              />
+            </div>
+
+            <div>
+              <label for="editDescription" class="block text-sm font-medium text-ink-800 mb-1.5">Description</label>
+              <textarea
+                id="editDescription"
+                v-model="editingDescription"
+                rows="2"
+                class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition resize-y"
+              ></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="editPriority" class="block text-sm font-medium text-ink-800 mb-1.5">Priority</label>
+                <select
+                  id="editPriority"
+                  v-model="editingPriority"
+                  class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+                >
+                  <option disabled value="">Choose</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div>
+                <label for="editDueDate" class="block text-sm font-medium text-ink-800 mb-1.5">Deadline</label>
+                <input
+                  id="editDueDate"
+                  v-model="editingDueDate"
+                  type="date"
+                  class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+                />
+              </div>
+            </div>
+
+            <div v-if="auth.user?.role === 'admin'">
+              <label for="editAssignee" class="block text-sm font-medium text-ink-800 mb-1.5">Assign to</label>
+              <select
+                id="editAssignee"
+                v-model="editingUserId"
+                class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+              >
+                <option disabled value="">Choose a teammate</option>
+                <option v-for="user in users" :key="user.id" :value="user.id">
+                  {{ user.name }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <div class="flex justify-end gap-2.5 mt-6">
+            <button
+              @click="cancelEdit"
+              class="text-sm font-medium text-ink-800 border border-ink-950/15 hover:bg-ink-950/4 rounded-xl px-4 py-2.5 transition-colors"
+            >
+              Cancel
+            </button>
+            <button
+              @click="confirmEdit"
+              :disabled="isLoading"
+              class="text-sm font-medium bg-brand-600 hover:bg-brand-700 text-white rounded-xl px-5 py-2.5 shadow-[0_2px_10px_rgba(39,67,211,0.35)] disabled:opacity-50 transition-colors"
+            >
+              Save changes
             </button>
           </div>
         </div>
@@ -253,33 +411,35 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useTaskStore } from '@/stores/task'
 import { useUserStore } from '@/stores/user'
 import { fetchUsers } from '@/services/userService'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
+import TaskCard from '@/components/TaskCard.vue'
+import TaskBoard from '@/components/TaskBoard.vue'
+import TaskFilters from '@/components/TaskFilters.vue'
 
 const auth = useAuthStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
 const router = useRouter()
 
-// UI state
+// ---------- UI state ----------
 const toasts = ref([])
 let toastId = 1
 
-// editing
 const editingTask = ref(null)
 const editingTitle = ref('')
 const editingDescription = ref('')
 const editingPriority = ref('')
 const editingDueDate = ref('')
+const editingUserId = ref(null)
 
-// computed combined loading flag
 const isLoading = computed(() => !!auth.loading || !!taskStore.loading || !!userStore.loading)
-// helper: show toast
+
 function showToast(message, type = 'success', timeout = 3500) {
   const id = toastId++
   toasts.value.push({ id, message, type })
@@ -289,7 +449,98 @@ function showToast(message, type = 'success', timeout = 3500) {
   }, timeout)
 }
 
-// new task form fields
+// ---------- Filters & view ----------
+const view = ref(localStorage.getItem('taskline:view') || 'list')
+const ui = reactive({ search: '', status: '', priority: '', sort: 'latest' })
+
+const filtersActive = computed(() => !!(ui.search || ui.status || ui.priority))
+
+async function applyFilter(key, value) {
+  ui[key] = value
+  await refetchWithFilters()
+}
+
+function setView(v) {
+  view.value = v
+  localStorage.setItem('taskline:view', v)
+  // The board always shows every status as its columns
+  if (v === 'board' && ui.status) {
+    applyFilter('status', '')
+  }
+}
+
+async function clearFilters() {
+  ui.search = ''
+  ui.status = ''
+  ui.priority = ''
+  await refetchWithFilters()
+}
+
+function refetchWithFilters() {
+  return taskStore.fetchTasks({
+    search: ui.search,
+    status: view.value === 'board' ? '' : ui.status,
+    priority: ui.priority,
+    sort: ui.sort,
+  })
+}
+
+// ---------- Derived stats ----------
+const visibleTasks = computed(() =>
+  auth.user?.role === 'admin' ? [...taskStore.myTasks, ...taskStore.otherTasks] : taskStore.tasks,
+)
+
+const stats = computed(() => {
+  const list = visibleTasks.value
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  let pending = 0
+  let inProgress = 0
+  let completed = 0
+  let overdue = 0
+  for (const t of list) {
+    if (t.status === 'completed') completed++
+    else if (t.status === 'in-progress') inProgress++
+    else pending++
+    if (t.due_date && t.status !== 'completed') {
+      const d = new Date(t.due_date.split(' ')[0] + 'T00:00:00')
+      if (!isNaN(d) && d < today) overdue++
+    }
+  }
+  return { total: list.length, pending, inProgress, completed, overdue }
+})
+
+const completionPct = computed(() =>
+  stats.value.total ? Math.round((stats.value.completed / stats.value.total) * 100) : 0,
+)
+
+const ringCircumference = 2 * Math.PI * 52
+const ringOffset = computed(() => ringCircumference * (1 - completionPct.value / 100))
+
+const momentumLine = computed(() => {
+  const pct = completionPct.value
+  if (pct === 100) return 'everything is wrapped up.'
+  if (pct >= 60) return 'the finish line is close.'
+  if (pct > 0) return 'keep the momentum going.'
+  return 'time to get moving.'
+})
+
+const firstName = computed(() => (auth.user?.name || 'there').split(' ')[0])
+
+const greeting = computed(() => {
+  const h = new Date().getHours()
+  if (h < 12) return 'Good morning'
+  if (h < 18) return 'Good afternoon'
+  return 'Good evening'
+})
+
+const todayLabel = new Date().toLocaleDateString(undefined, {
+  weekday: 'long',
+  month: 'long',
+  day: 'numeric',
+})
+
+// ---------- New task form ----------
 const newTaskTitle = ref('')
 const newTaskDescription = ref('')
 const newTaskPriority = ref('')
@@ -310,59 +561,53 @@ async function addTask() {
       payload.user_id = assignedUserId.value
     }
     await taskStore.addTask(payload)
-    showToast('Task added', 'success')
-    // reset form
+    showToast('Task added')
     newTaskTitle.value = ''
     newTaskDescription.value = ''
     newTaskPriority.value = ''
     newTaskDueDate.value = ''
     assignedUserId.value = ''
-  } catch (e) {
-    showToast(taskStore.error || 'Failed to add task', e)
+  } catch {
+    showToast(taskStore.error || 'Failed to add task', 'error')
   }
 }
 
-// toggle status (pending <-> completed)
-async function toggleStatus(task) {
-  // const newStatus = task.status === 'completed' ? 'pending' : 'completed'
+// ---------- Status ----------
+async function changeStatus(task, status) {
   try {
-    await taskStore.updateTask(task.id, { status: task.status })
-    showToast('Status updated', 'success')
-  } catch (e) {
-    showToast(taskStore.error || 'Failed to update task', e)
+    await taskStore.updateTask(task.id, { status })
+    showToast('Status updated')
+  } catch {
+    showToast(taskStore.error || 'Failed to update task', 'error')
   }
 }
 
-// delete task
+// ---------- Delete ----------
 async function removeTask(id) {
   if (!confirm('Delete this task?')) return
   try {
     await taskStore.deleteTask(id)
-    showToast('Task deleted', 'success')
-  } catch (e) {
-    showToast(taskStore.error || 'Failed to delete task', e)
+    showToast('Task deleted')
+  } catch {
+    showToast(taskStore.error || 'Failed to delete task', 'error')
   }
 }
 
-// edit flows
-function cancelEdit() {
-  editingTask.value = null
-  editingTitle.value = ''
-}
-
-const editingUserId = ref(null)
-
-// when starting edit, prefill user_id
+// ---------- Edit ----------
 function startEdit(task) {
   editingTask.value = task
   editingTitle.value = task.title
   editingDescription.value = task.description
   editingPriority.value = task.priority
-  editingDueDate.value = task.due_date ? task.due_date.split(' ')[0] : '' // format date
+  editingDueDate.value = task.due_date ? task.due_date.split(' ')[0] : ''
   editingUserId.value = task.user_id
 }
 
-// confirm edit
+function cancelEdit() {
+  editingTask.value = null
+  editingTitle.value = ''
+}
+
 async function confirmEdit() {
   if (!editingTask.value) return
   const id = editingTask.value.id
@@ -372,41 +617,39 @@ async function confirmEdit() {
     priority: editingPriority.value,
     due_date: editingDueDate.value || null,
   }
-
   if (auth.user?.role === 'admin' && editingUserId.value) {
     payload.user_id = editingUserId.value
   }
-
   try {
     await taskStore.updateTask(id, payload)
-    showToast('Task saved', 'success')
+    showToast('Changes saved')
     cancelEdit()
-  } catch (e) {
-    showToast(taskStore.error || 'Failed to save task', e)
+  } catch {
+    showToast(taskStore.error || 'Failed to save changes', 'error')
   }
 }
 
-const users = ref([]) // list of users
+// ---------- Data loading ----------
+const users = ref([])
 
 onMounted(async () => {
   if (!auth.user && auth.token) {
     try {
       await auth.fetchUser()
     } catch (e) {
-      console.log(e);
+      console.log(e)
       auth.localLogout()
       router.push('/login')
       return
     }
   }
 
-  await taskStore.fetchTasks()
+  await refetchWithFilters()
 
   if (auth.user?.role === 'admin') {
     try {
       const { data } = await fetchUsers(auth)
       users.value = data
-      // console.log(users.value)
     } catch (e) {
       console.error('Failed to fetch users', e)
     }
@@ -415,27 +658,14 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-/* small transition for toasts */
 .toast-enter-active,
 .toast-leave-active {
   transition: all 0.25s ease;
 }
-
 .toast-enter-from {
   transform: translateY(-8px);
   opacity: 0;
 }
-
-.toast-enter-to {
-  transform: translateY(0);
-  opacity: 1;
-}
-
-.toast-leave-from {
-  transform: translateY(0);
-  opacity: 1;
-}
-
 .toast-leave-to {
   transform: translateY(-8px);
   opacity: 0;

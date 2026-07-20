@@ -17,4 +17,18 @@ class UserService
     {
         return $this->userRepository->getAll();
     }
+
+    public function getUserWithTasks($id)
+    {
+        $user = $this->userRepository->getById($id);
+
+        if (!$user) {
+            return null;
+        }
+
+        return [
+            'user' => $user->only(['id', 'name', 'email', 'role']),
+            'tasks' => $user->tasks()->latest()->get(),
+        ];
+    }
 }

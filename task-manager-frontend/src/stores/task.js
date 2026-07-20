@@ -6,16 +6,24 @@ export const useTaskStore = defineStore('task', {
     tasks: [], // for normal users
     myTasks: [], // for admins (their own tasks)
     otherTasks: [], // for admins (other users' tasks)
+    filters: { search: '', status: '', priority: '', sort: 'latest' },
     loading: false,
     error: null,
   }),
 
   actions: {
-    async fetchTasks() {
+    /**
+     * Fetch tasks using the current filters. Pass a partial filters object
+     * to update them first (e.g. fetchTasks({ status: 'pending' })).
+     */
+    async fetchTasks(filters = null) {
+      if (filters) {
+        this.filters = { ...this.filters, ...filters }
+      }
       this.loading = true
       this.error = null
       try {
-        const res = await taskService.getAll()
+        const res = await taskService.getAll(this.filters)
 
         if (Array.isArray(res.data)) {
           // normal user → only own tasks
@@ -26,7 +34,7 @@ export const useTaskStore = defineStore('task', {
           // admin → split into two lists
           this.myTasks = res.data.my_tasks
           this.otherTasks = res.data.other_tasks
-          this.tasks = [] // clear normal list
+          this.tasks = []
         } else {
           this.tasks = []
           this.myTasks = []
@@ -47,7 +55,6 @@ export const useTaskStore = defineStore('task', {
       this.error = null
       try {
         await taskService.create(payload)
-        // 🔄 Always refresh from backend
         return await this.fetchTasks()
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to add task'
@@ -58,12 +65,10 @@ export const useTaskStore = defineStore('task', {
     },
 
     async updateTask(id, payload) {
-      console.log(id, payload)
       this.loading = true
       this.error = null
       try {
         await taskService.update(id, payload)
-        // 🔄 Always refresh
         return await this.fetchTasks()
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to update task'
@@ -78,7 +83,6 @@ export const useTaskStore = defineStore('task', {
       this.error = null
       try {
         await taskService.delete(id)
-        // 🔄 Always refresh
         return await this.fetchTasks()
       } catch (err) {
         this.error = err.response?.data?.message || 'Failed to delete task'

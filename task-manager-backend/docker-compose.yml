@@ -6,6 +6,7 @@ services:
       context: .
     container_name: task-manager-backend
     restart: unless-stopped
+    # restart: "no"   # For development, if we don't want the container to restart automatically
     ports:
       - "9000:9000"
     command: php artisan serve --host=0.0.0.0 --port=9000
@@ -33,6 +34,7 @@ services:
     image: mysql:8.0
     container_name: mysql-db
     restart: always
+    # restart: "no"  # For development, if we don't want the container to restart automatically
     environment:
       MYSQL_DATABASE: task_manager
       MYSQL_USER: taskuser

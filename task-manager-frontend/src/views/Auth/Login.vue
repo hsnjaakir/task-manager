@@ -1,51 +1,61 @@
 <!-- eslint-disable vue/multi-word-component-names -->
 <template>
-  <AuthenticatedLayout>
-    <div class="min-h-screen flex items-center justify-center bg-gray-100">
-      <div class="w-full flex flex-col gap-2 max-w-md bg-white p-8 rounded-xl shadow-md">
-        <h2 class="text-2xl font-bold text-center mb-6">Login</h2>
+  <AuthShell>
+    <h2 class="font-display text-2xl font-semibold tracking-tight">Welcome back</h2>
+    <p class="text-sm text-ink-400 mt-1 mb-7">Log in to pick up where you left off.</p>
 
-        <form class="flex flex-col gap-2" @submit.prevent="handleLogin">
-          <div class="flex flex-col gap-2">
-            <input
-              v-model="form.email"
-              type="email"
-              placeholder="Email"
-              class="w-full p-2 border rounded mb-3 focus:outline-none focus:ring focus:border-blue-300"
-            />
-
-            <input
-              v-model="form.password"
-              type="password"
-              placeholder="Password"
-              class="w-full p-2 border rounded mb-4 focus:outline-none focus:ring focus:border-blue-300"
-            />
-          </div>
-
-          <button
-            type="submit"
-            :disabled="auth.loading"
-            class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded flex justify-center items-center"
-          >
-            <span>{{ auth.loading ? 'Logging in...' : 'Login' }}</span>
-          </button>
-        </form>
-        <p v-if="auth.error" class="text-red-500 mt-3">{{ auth.error }}</p>
-
-        <p class="text-center text-sm text-gray-600 mt-4">
-          Don’t have an account?
-          <router-link to="/register" class="text-blue-500 hover:underline">Register</router-link>
-        </p>
+    <form class="flex flex-col gap-4" @submit.prevent="handleLogin">
+      <div>
+        <label for="email" class="block text-sm font-medium text-ink-800 mb-1.5">Email</label>
+        <input
+          id="email"
+          v-model="form.email"
+          type="email"
+          required
+          autocomplete="email"
+          placeholder="you@example.com"
+          class="w-full rounded-xl border border-ink-950/15 bg-white px-3.5 py-2.5 text-sm placeholder:text-ink-400/70 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition"
+        />
       </div>
-    </div>
-  </AuthenticatedLayout>
+
+      <div>
+        <label for="password" class="block text-sm font-medium text-ink-800 mb-1.5">Password</label>
+        <input
+          id="password"
+          v-model="form.password"
+          type="password"
+          required
+          autocomplete="current-password"
+          placeholder="••••••••"
+          class="w-full rounded-xl border border-ink-950/15 bg-white px-3.5 py-2.5 text-sm placeholder:text-ink-400/70 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition"
+        />
+      </div>
+
+      <button
+        type="submit"
+        :disabled="auth.loading"
+        class="mt-2 w-full bg-brand-600 hover:bg-brand-700 active:bg-brand-700 text-white font-medium py-2.5 rounded-xl shadow-[0_2px_10px_rgba(39,67,211,0.35)] disabled:opacity-60 transition-colors"
+      >
+        {{ auth.loading ? 'Logging in…' : 'Log in' }}
+      </button>
+    </form>
+
+    <p v-if="auth.error" class="mt-4 text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-3.5 py-2.5">
+      {{ auth.error }}
+    </p>
+
+    <p class="text-center text-sm text-ink-400 mt-7">
+      New here?
+      <router-link to="/register" class="text-brand-600 font-medium hover:underline rounded">Create an account</router-link>
+    </p>
+  </AuthShell>
 </template>
 
 <script setup>
 import { reactive } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import { useRouter } from 'vue-router'
-import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
+import AuthShell from '@/layouts/AuthShell.vue'
 
 const router = useRouter()
 const auth = useAuthStore()

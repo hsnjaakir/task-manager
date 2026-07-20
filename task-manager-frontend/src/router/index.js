@@ -11,13 +11,18 @@ const routes = [
   { path: '/register', component: Register },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
   { path: '/', redirect: '/login' },
-  // New Admin-only routes
-  { path: '/users', name: 'user.list', component: UserList, meta: { requiresAuth: true } },
+  // Admin-only routes
+  {
+    path: '/users',
+    name: 'user.list',
+    component: UserList,
+    meta: { requiresAuth: true, adminOnly: true },
+  },
   {
     path: '/users/:id',
     name: 'user.details',
     component: UserDetails,
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, adminOnly: true },
   },
 ]
 
@@ -32,8 +37,8 @@ router.beforeEach((to, from, next) => {
     return next('/login')
   }
 
-  // extra: only admins can access /users
-  if (to.name === 'user.list' && auth.user?.role !== 'admin') {
+  // Admin-only routes bounce non-admins back to the dashboard
+  if (to.meta.adminOnly && auth.user?.role !== 'admin') {
     return next('/dashboard')
   }
 

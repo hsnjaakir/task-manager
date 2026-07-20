@@ -7,6 +7,7 @@ use App\Http\Requests\Task\StoreTaskRequest;
 use App\Http\Requests\Task\UpdateTaskRequest;
 use App\Models\Task;
 use App\Services\TaskService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class TaskController extends Controller
@@ -18,9 +19,11 @@ class TaskController extends Controller
         $this->taskService = $taskService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        return response()->json($this->taskService->getAll(Auth::user()));
+        $filters = $request->only(['status', 'priority', 'search', 'sort']);
+
+        return response()->json($this->taskService->getAll(Auth::user(), $filters));
     }
 
     public function store(StoreTaskRequest $request)
