@@ -1,34 +1,59 @@
-@import './base.css';
+@import '@fontsource-variable/space-grotesk';
+@import '@fontsource-variable/inter';
 @import 'tailwindcss';
 
-#app {
-  width: 75%;
-  margin: 0 auto;
-  padding: 2rem;
-  font-weight: normal;
+@theme {
+  /* Type */
+  --font-sans: 'Inter Variable', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Space Grotesk Variable', 'Inter Variable', ui-sans-serif, sans-serif;
+
+  /* Ink — deep navy surfaces (nav, auth panel, toasts) */
+  --color-ink-950: #0b1120;
+  --color-ink-900: #131b30;
+  --color-ink-800: #1c2742;
+  --color-ink-700: #273455;
+  --color-ink-400: #8b96b4;
+  --color-ink-200: #cdd4e4;
+
+  /* Canvas — warm paper background */
+  --color-canvas: #f2f2ee;
+
+  /* Brand — cobalt */
+  --color-brand-50: #eef1fe;
+  --color-brand-100: #dde4fd;
+  --color-brand-200: #bcc9fa;
+  --color-brand-400: #5f78ee;
+  --color-brand-500: #3b55e6;
+  --color-brand-600: #2743d3;
+  --color-brand-700: #1f36ae;
 }
 
-a,
-.green {
-  text-decoration: none;
-  color: hsla(160, 100%, 37%, 1);
-  transition: 0.4s;
-  padding: 3px;
+/* Base */
+html {
+  font-family: var(--font-sans);
+  color: var(--color-ink-950);
+  background: var(--color-canvas);
 }
 
-@media (hover: hover) {
-  a:hover {
-    background-color: hsla(160, 100%, 37%, 0.2);
-  }
+h1, h2, h3, .font-display {
+  font-family: var(--font-display);
 }
 
-@media (min-width: 1024px) {
-  body {
-    display: flex;
-    place-items: center;
-  }
+/* Native controls inherit the app font */
+button, input, select, textarea {
+  font-family: inherit;
+}
 
-  #app {
-    padding: 0 2rem;
+/* Visible keyboard focus everywhere */
+:focus-visible {
+  outline: 2px solid var(--color-brand-500);
+  outline-offset: 2px;
+}
+
+/* Respect reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
   }
 }

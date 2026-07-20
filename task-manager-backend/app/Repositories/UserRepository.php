@@ -10,4 +10,9 @@ class UserRepository
     {
         return User::select('id', 'name', 'email', 'role')->get();
     }
+
+    public function getById($id)
+    {
+        return User::find($id);
+    }
 }

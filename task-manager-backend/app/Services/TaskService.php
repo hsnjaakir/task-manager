@@ -14,13 +14,13 @@ class TaskService
         $this->taskRepository = $taskRepository;
     }
 
-    public function getAll($user)
+    public function getAll($user, array $filters = [])
     {
         if ($user->role === 'admin') {
-            return $this->taskRepository->getForAdmin($user->id);
+            return $this->taskRepository->getForAdmin($user->id, $filters);
         }
 
-        return $this->taskRepository->getByUser($user->id);
+        return $this->taskRepository->getByUser($user->id, $filters);
     }
 
     public function create($user, array $data)

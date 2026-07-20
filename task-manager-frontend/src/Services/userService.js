@@ -7,3 +7,9 @@ export async function fetchUsers(auth) {
     })
   }
 }
+
+export async function getUserById(id, auth) {
+  return api.get(`/users/${id}`, {
+    headers: { Authorization: `Bearer ${auth.token}` },
+  })
+}
