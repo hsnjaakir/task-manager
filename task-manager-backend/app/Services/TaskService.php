@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\Task;
+use App\Models\User;
+use App\Notifications\TaskAssigned;
 use App\Repositories\TaskRepository;
 
 class TaskService
@@ -27,7 +29,9 @@ class TaskService
     {
         // Admin can create task for any user
         if ($user->role === 'admin' && isset($data['user_id'])) {
-            return $this->taskRepository->createForUser($data['user_id'], $data);
+            $task = $this->taskRepository->createForUser($data['user_id'], $data);
+            $this->notifyAssignee($task, $user, (int) $data['user_id']);
+            return $task;
         }
 
         // Normal user: only for self
@@ -40,7 +44,14 @@ class TaskService
             abort(403, 'Unauthorized');
         }
 
-        return $this->taskRepository->update($task, $data);
+        $previousAssignee = $task->user_id;
+        $task = $this->taskRepository->update($task, $data);
+
+        if (array_key_exists('user_id', $data) && (int) $data['user_id'] !== (int) $previousAssignee) {
+            $this->notifyAssignee($task, $user, (int) $data['user_id']);
+        }
+
+        return $task;
     }
 
     public function delete($user, Task $task)
@@ -50,5 +61,21 @@ class TaskService
         }
 
         return $this->taskRepository->delete($task);
+    }
+
+    /**
+     * Notify a user that a task was assigned to them — but never notify
+     * someone about assigning a task to themselves.
+     */
+    protected function notifyAssignee(Task $task, $actor, int $assigneeId): void
+    {
+        if ($assigneeId === (int) $actor->id) {
+            return;
+        }
+
+        $assignee = User::find($assigneeId);
+        if ($assignee) {
+            $assignee->notify(new TaskAssigned($task, $actor->name));
+        }
     }
 }

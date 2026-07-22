@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   laravel:
     build:
@@ -20,6 +18,7 @@ services:
       DB_PASSWORD: secret
     depends_on:
       - db
+      - mailpit
   # nginx:
   #   image: nginx:alpine
   #   container_name: task-manager-nginx
@@ -44,6 +43,16 @@ services:
       - "3306:3306"
     volumes:
       - db_data:/var/lib/mysql
+
+  # Local email inbox — catches all outgoing mail.
+  # SMTP on 1025 (what Laravel connects to), web UI on http://localhost:8025
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: mailpit
+    restart: unless-stopped
+    ports:
+      - "1025:1025"
+      - "8025:8025"
 
   # frontend:
   #   build:

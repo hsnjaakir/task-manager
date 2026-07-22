@@ -59,6 +59,7 @@
             >
               <span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>{{ stats.overdue }} overdue
             </span>
+<<<<<<< Updated upstream
           </div>
         </div>
 
@@ -159,9 +160,401 @@
                 {{ user.name }}
               </option>
             </select>
+=======
           </div>
         </div>
 
+        <!-- Completion ring -->
+        <div class="relative shrink-0 hidden sm:block" role="img" :aria-label="`${completionPct}% of tasks completed`">
+          <svg viewBox="0 0 120 120" class="w-28 h-28 -rotate-90">
+            <circle cx="60" cy="60" r="52" fill="none" stroke="rgba(255,255,255,0.09)" stroke-width="10" />
+            <circle
+              cx="60" cy="60" r="52" fill="none"
+              stroke="url(#ringGrad)" stroke-width="10" stroke-linecap="round"
+              :stroke-dasharray="ringCircumference"
+              :stroke-dashoffset="ringOffset"
+              style="transition: stroke-dashoffset 0.7s cubic-bezier(0.22, 1, 0.36, 1)"
+            />
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#5f78ee" />
+                <stop offset="100%" stop-color="#34d399" />
+              </linearGradient>
+            </defs>
+          </svg>
+          <div class="absolute inset-0 grid place-items-center rotate-0">
+            <div class="text-center">
+              <p class="font-display text-2xl font-semibold leading-none">{{ completionPct }}<span class="text-sm">%</span></p>
+              <p class="text-[10px] uppercase tracking-widest text-ink-400 mt-1">done</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ============ Composer: progressive quick-add ============ -->
+      <section
+        class="mt-6 bg-white rounded-2xl border shadow-[0_1px_2px_rgba(11,17,32,0.05)] transition-colors"
+        :class="composerOpen ? 'border-brand-200' : 'border-ink-950/8'"
+      >
+        <!-- Quick-add row: icon + title + add. Kept intentionally simple so
+             the horizontal rhythm is just [icon] [flexible title] [button]. -->
+        <div class="flex items-center gap-2.5 sm:gap-3 p-2.5 sm:p-3">
+          <span
+            class="grid place-items-center w-9 h-9 rounded-xl bg-brand-50 text-brand-600 shrink-0"
+            aria-hidden="true"
+          >
+            <svg viewBox="0 0 14 14" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>
+          </span>
+
+          <input
+            id="newTitle"
+            v-model="newTaskTitle"
+            type="text"
+            placeholder="Add a task…"
+            aria-label="Task title"
+            class="flex-1 min-w-0 bg-transparent text-sm sm:text-base placeholder:text-ink-400/70 focus:outline-none py-1.5"
+            @focus="composerOpen = true"
+            @keydown.enter.prevent="addTask"
+          />
+
+          <button
+            @click="addTask"
+            :disabled="!newTaskTitle.trim() || isLoading"
+            class="inline-flex items-center justify-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium h-9 w-9 sm:w-auto sm:px-5 rounded-xl shadow-[0_2px_10px_rgba(39,67,211,0.35)] disabled:opacity-40 disabled:shadow-none transition-all shrink-0"
+            aria-label="Add task"
+          >
+            <svg viewBox="0 0 14 14" class="w-4 h-4 sm:hidden" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>
+            <span class="hidden sm:inline">Add task</span>
+          </button>
+        </div>
+
+        <!-- Details: revealed on focus. One consistent layout for all screens. -->
+        <transition
+          enter-active-class="transition-all duration-200 ease-out"
+          leave-active-class="transition-all duration-150 ease-in"
+          enter-from-class="opacity-0 -translate-y-1"
+          leave-to-class="opacity-0 -translate-y-1"
+        >
+          <div v-show="composerOpen" class="border-t border-ink-950/8 p-4 sm:p-5 space-y-4">
+            <!-- Priority: full-width segmented control, same on every screen -->
+            <div>
+              <label class="block text-xs font-medium text-ink-400 uppercase tracking-wide mb-2">Priority</label>
+              <div class="grid grid-cols-3 gap-2" role="group" aria-label="Priority">
+                <button
+                  v-for="p in priorityOptions"
+                  :key="p.value"
+                  type="button"
+                  @click="newTaskPriority = newTaskPriority === p.value ? '' : p.value"
+                  class="inline-flex items-center justify-center gap-1.5 text-sm font-medium rounded-xl border py-2.5 transition-all"
+                  :class="newTaskPriority === p.value ? p.activeClass : 'border-ink-950/12 text-ink-700 hover:border-ink-950/25'"
+                  :aria-pressed="newTaskPriority === p.value"
+                >
+                  <svg viewBox="0 0 16 16" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path v-if="p.value === 'high'" d="M8 13V3M8 3L4 7M8 3l4 4" />
+                    <path v-else-if="p.value === 'medium'" d="M3 8h10" />
+                    <path v-else d="M8 3v10M8 13l4-4M8 13l-4-4" />
+                  </svg>
+                  {{ p.label }}
+                </button>
+              </div>
+            </div>
+
+            <!-- Deadline / Project / Assignee: even columns that wrap cleanly.
+                 Each is self-contained so no row is ever left orphaned. -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label for="newDueDate" class="block text-xs font-medium text-ink-400 uppercase tracking-wide mb-1.5">Deadline</label>
+                <input
+                  id="newDueDate"
+                  v-model="newTaskDueDate"
+                  type="date"
+                  class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+                />
+              </div>
+
+              <div>
+                <label for="newProject" class="block text-xs font-medium text-ink-400 uppercase tracking-wide mb-1.5">Project</label>
+                <select
+                  id="newProject"
+                  v-model="newTaskProjectId"
+                  class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+                >
+                  <option value="">No project</option>
+                  <option v-for="p in projectStore.projects" :key="p.id" :value="p.id">
+                    {{ p.name }}
+                  </option>
+                </select>
+              </div>
+
+              <div v-if="auth.user?.role === 'admin'">
+                <label for="newAssignee" class="block text-xs font-medium text-ink-400 uppercase tracking-wide mb-1.5">Assign to</label>
+                <select
+                  id="newAssignee"
+                  v-model="assignedUserId"
+                  class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+                >
+                  <option value="">Assign to myself</option>
+                  <option v-for="user in users" :key="user.id" :value="user.id">
+                    {{ user.name }}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Description: full width, the natural place for a longer field -->
+            <div>
+              <label for="newDescription" class="block text-xs font-medium text-ink-400 uppercase tracking-wide mb-1.5">
+                Description
+              </label>
+              <textarea
+                id="newDescription"
+                v-model="newTaskDescription"
+                rows="2"
+                placeholder="Add any details worth noting"
+                class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm placeholder:text-ink-400/70 focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition resize-y"
+              />
+            </div>
+
+            <!-- Footer actions -->
+            <div class="flex items-center justify-end gap-2 pt-1">
+              <button
+                type="button"
+                @click="collapseComposer"
+                class="text-sm font-medium text-ink-400 hover:text-ink-800 rounded-lg px-3 py-2 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                @click="addTask"
+                :disabled="!newTaskTitle.trim() || isLoading"
+                class="inline-flex items-center gap-2 bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-5 py-2 rounded-xl shadow-[0_2px_10px_rgba(39,67,211,0.35)] disabled:opacity-40 disabled:shadow-none transition-all"
+              >
+                <svg viewBox="0 0 14 14" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M7 2.5v9M2.5 7h9"/></svg>
+                Add task
+              </button>
+            </div>
+          </div>
+        </transition>
+      </section>
+
+      <!-- ============ Toolbar: search, filters, sort, view ============ -->
+      <section class="mt-6">
+        <TaskFilters
+          :search="ui.search"
+          :status="ui.status"
+          :priority="ui.priority"
+          :sort="ui.sort"
+          :view="view"
+          @update:search="(v) => applyFilter('search', v)"
+          @update:status="(v) => applyFilter('status', v)"
+          @update:priority="(v) => applyFilter('priority', v)"
+          @update:sort="(v) => applyFilter('sort', v)"
+          @update:view="setView"
+        />
+      </section>
+
+      <!-- ============ Tasks ============ -->
+      <div v-if="taskStore.loading && !stats.total" class="text-ink-400 text-center py-10 text-sm">
+        Loading tasks…
+      </div>
+
+      <div v-else-if="!stats.total" class="mt-6 bg-white rounded-2xl border border-dashed border-ink-950/15 py-12 text-center">
+        <div class="mx-auto w-11 h-11 grid place-items-center rounded-xl bg-brand-50 text-brand-600 mb-3">
+          <svg viewBox="0 0 20 20" class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10.5l4 4 8-9"/></svg>
+        </div>
+        <template v-if="filtersActive">
+          <p class="font-medium text-ink-950 text-sm">No tasks match your filters</p>
+          <button @click="clearFilters" class="text-brand-600 hover:text-brand-700 text-sm font-medium mt-1 rounded">
+            Clear filters
+          </button>
+        </template>
+        <template v-else>
+          <p class="font-medium text-ink-950 text-sm">No tasks yet</p>
+          <p class="text-ink-400 text-sm mt-1">Add your first task above to get started.</p>
+        </template>
+      </div>
+
+      <!-- ===== Board view ===== -->
+      <template v-else-if="view === 'board'">
+        <template v-if="auth.user?.role === 'admin'">
+          <section class="mt-6">
+            <div class="flex items-center gap-2.5 mb-3">
+              <h3 class="font-display text-base font-semibold tracking-tight">My tasks</h3>
+              <span class="text-xs font-medium text-brand-700 bg-brand-50 rounded-full px-2 py-0.5">{{ taskStore.myTasks.length }}</span>
+            </div>
+            <TaskBoard
+              :tasks="taskStore.myTasks"
+              :disabled="isLoading"
+              @edit="startEdit"
+              @status-change="changeStatus"
+            />
+          </section>
+
+          <section class="mt-8">
+            <div class="flex items-center gap-2.5 mb-3">
+              <h3 class="font-display text-base font-semibold tracking-tight">Team tasks</h3>
+              <span class="text-xs font-medium text-brand-700 bg-brand-50 rounded-full px-2 py-0.5">{{ taskStore.otherTasks.length }}</span>
+            </div>
+            <TaskBoard
+              :tasks="taskStore.otherTasks"
+              show-assignee
+              :disabled="isLoading"
+              @edit="startEdit"
+              @status-change="changeStatus"
+            />
+          </section>
+        </template>
+
+        <section v-else class="mt-6">
+          <TaskBoard
+            :tasks="taskStore.tasks"
+            :disabled="isLoading"
+            @edit="startEdit"
+            @status-change="changeStatus"
+          />
+        </section>
+      </template>
+
+      <!-- ===== List view ===== -->
+      <template v-else>
+        <template v-if="auth.user?.role === 'admin'">
+          <section class="mt-6">
+            <div class="flex items-center gap-2.5 mb-3">
+              <h3 class="font-display text-base font-semibold tracking-tight">My tasks</h3>
+              <span class="text-xs font-medium text-brand-700 bg-brand-50 rounded-full px-2 py-0.5">{{ taskStore.myTasks.length }}</span>
+            </div>
+            <ul v-if="taskStore.myTasks.length" class="space-y-2">
+              <TaskCard
+                v-for="task in taskStore.myTasks"
+                :key="task.id"
+                :task="task"
+                :disabled="isLoading"
+                @edit="startEdit(task)"
+                @delete="removeTask(task.id)"
+                @status-change="(s) => changeStatus(task, s)"
+              />
+            </ul>
+            <p v-else class="text-ink-400 text-sm bg-white border border-dashed border-ink-950/15 rounded-xl py-5 text-center">
+              {{ filtersActive ? 'No matching tasks in this section.' : 'Nothing assigned to you right now.' }}
+            </p>
+          </section>
+
+          <section class="mt-8">
+            <div class="flex items-center gap-2.5 mb-3">
+              <h3 class="font-display text-base font-semibold tracking-tight">Team tasks</h3>
+              <span class="text-xs font-medium text-brand-700 bg-brand-50 rounded-full px-2 py-0.5">{{ taskStore.otherTasks.length }}</span>
+            </div>
+            <ul v-if="taskStore.otherTasks.length" class="space-y-2">
+              <TaskCard
+                v-for="task in taskStore.otherTasks"
+                :key="task.id"
+                :task="task"
+                show-assignee
+                :disabled="isLoading"
+                @edit="startEdit(task)"
+                @delete="removeTask(task.id)"
+                @status-change="(s) => changeStatus(task, s)"
+              />
+            </ul>
+            <p v-else class="text-ink-400 text-sm bg-white border border-dashed border-ink-950/15 rounded-xl py-5 text-center">
+              {{ filtersActive ? 'No matching tasks in this section.' : 'No tasks assigned to teammates yet.' }}
+            </p>
+          </section>
+        </template>
+
+        <section v-else class="mt-6">
+          <ul class="space-y-2">
+            <TaskCard
+              v-for="task in taskStore.tasks"
+              :key="task.id"
+              :task="task"
+              :disabled="isLoading"
+              @edit="startEdit(task)"
+              @delete="removeTask(task.id)"
+              @status-change="(s) => changeStatus(task, s)"
+            />
+          </ul>
+        </section>
+      </template>
+
+      <!-- Error -->
+      <p v-if="taskStore.error" class="mt-4 text-sm text-rose-600 bg-rose-50 border border-rose-100 rounded-xl px-3.5 py-2.5 text-center">
+        {{ taskStore.error }}
+      </p>
+
+      <!-- ============ Edit modal ============ -->
+      <div
+        v-if="editingTask"
+        class="fixed inset-0 z-[55] flex items-center justify-center bg-ink-950/50 backdrop-blur-[2px] p-4"
+        @click.self="cancelEdit"
+      >
+        <div class="bg-white rounded-2xl shadow-[0_24px_60px_rgba(11,17,32,0.35)] p-6 w-full max-w-md" role="dialog" aria-modal="true" aria-label="Edit task">
+          <h3 class="font-display text-lg font-semibold tracking-tight mb-5">Edit task</h3>
+
+          <div class="space-y-4">
+            <div>
+              <label for="editTitle" class="block text-sm font-medium text-ink-800 mb-1.5">Title</label>
+              <input
+                id="editTitle"
+                v-model="editingTitle"
+                type="text"
+                class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition"
+              />
+            </div>
+
+            <div>
+              <label for="editDescription" class="block text-sm font-medium text-ink-800 mb-1.5">Description</label>
+              <textarea
+                id="editDescription"
+                v-model="editingDescription"
+                rows="2"
+                class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition resize-y"
+              ></textarea>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div>
+                <label for="editPriority" class="block text-sm font-medium text-ink-800 mb-1.5">Priority</label>
+                <select
+                  id="editPriority"
+                  v-model="editingPriority"
+                  class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+                >
+                  <option disabled value="">Choose</option>
+                  <option value="low">Low</option>
+                  <option value="medium">Medium</option>
+                  <option value="high">High</option>
+                </select>
+              </div>
+              <div>
+                <label for="editDueDate" class="block text-sm font-medium text-ink-800 mb-1.5">Deadline</label>
+                <input
+                  id="editDueDate"
+                  v-model="editingDueDate"
+                  type="date"
+                  class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+                />
+              </div>
+            </div>
+
+            <div v-if="auth.user?.role === 'admin'">
+              <label for="editAssignee" class="block text-sm font-medium text-ink-800 mb-1.5">Assign to</label>
+              <select
+                id="editAssignee"
+                v-model="editingUserId"
+                class="w-full rounded-xl border border-ink-950/15 px-3.5 py-2.5 text-sm focus:border-brand-500 focus:ring-2 focus:ring-brand-100 focus:outline-none transition bg-white"
+              >
+                <option disabled value="">Choose a teammate</option>
+                <option v-for="user in users" :key="user.id" :value="user.id">
+                  {{ user.name }}
+                </option>
+              </select>
+            </div>
+>>>>>>> Stashed changes
+          </div>
+        </div>
+
+<<<<<<< Updated upstream
         <div class="mt-5 flex justify-end">
           <button
             @click="addTask"
@@ -389,6 +782,8 @@
             </div>
           </div>
 
+=======
+>>>>>>> Stashed changes
           <div class="flex justify-end gap-2.5 mt-6">
             <button
               @click="cancelEdit"
@@ -412,10 +807,15 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
+<<<<<<< Updated upstream
 import { useRouter } from 'vue-router'
+=======
+import { useRouter, useRoute } from 'vue-router'
+>>>>>>> Stashed changes
 import { useAuthStore } from '@/stores/auth'
 import { useTaskStore } from '@/stores/task'
 import { useUserStore } from '@/stores/user'
+import { useProjectStore } from '@/stores/project'
 import { fetchUsers } from '@/services/userService'
 import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue'
 import TaskCard from '@/components/TaskCard.vue'
@@ -425,7 +825,9 @@ import TaskFilters from '@/components/TaskFilters.vue'
 const auth = useAuthStore()
 const taskStore = useTaskStore()
 const userStore = useUserStore()
+const projectStore = useProjectStore()
 const router = useRouter()
+const route = useRoute()
 
 // ---------- UI state ----------
 const toasts = ref([])
@@ -451,9 +853,15 @@ function showToast(message, type = 'success', timeout = 3500) {
 
 // ---------- Filters & view ----------
 const view = ref(localStorage.getItem('taskline:view') || 'list')
+<<<<<<< Updated upstream
 const ui = reactive({ search: '', status: '', priority: '', sort: 'latest' })
 
 const filtersActive = computed(() => !!(ui.search || ui.status || ui.priority))
+=======
+const ui = reactive({ search: '', status: '', priority: '', sort: 'latest', project_id: route.query.project || '' })
+
+const filtersActive = computed(() => !!(ui.search || ui.status || ui.priority || ui.project_id))
+>>>>>>> Stashed changes
 
 async function applyFilter(key, value) {
   ui[key] = value
@@ -473,6 +881,10 @@ async function clearFilters() {
   ui.search = ''
   ui.status = ''
   ui.priority = ''
+<<<<<<< Updated upstream
+=======
+  ui.project_id = ''
+>>>>>>> Stashed changes
   await refetchWithFilters()
 }
 
@@ -482,6 +894,10 @@ function refetchWithFilters() {
     status: view.value === 'board' ? '' : ui.status,
     priority: ui.priority,
     sort: ui.sort,
+<<<<<<< Updated upstream
+=======
+    project_id: ui.project_id,
+>>>>>>> Stashed changes
   })
 }
 
@@ -541,11 +957,26 @@ const todayLabel = new Date().toLocaleDateString(undefined, {
 })
 
 // ---------- New task form ----------
+<<<<<<< Updated upstream
+=======
+const composerOpen = ref(false)
+>>>>>>> Stashed changes
 const newTaskTitle = ref('')
 const newTaskDescription = ref('')
 const newTaskPriority = ref('')
 const newTaskDueDate = ref('')
 const assignedUserId = ref('')
+const newTaskProjectId = ref('')
+
+const priorityOptions = [
+  { value: 'high', label: 'High', activeClass: 'border-rose-200 bg-rose-50 text-rose-600' },
+  { value: 'medium', label: 'Medium', activeClass: 'border-amber-200 bg-amber-50 text-amber-700' },
+  { value: 'low', label: 'Low', activeClass: 'border-sky-200 bg-sky-50 text-sky-700' },
+]
+
+function collapseComposer() {
+  composerOpen.value = false
+}
 
 async function addTask() {
   const title = newTaskTitle.value.trim()
@@ -556,6 +987,7 @@ async function addTask() {
       description: newTaskDescription.value.trim() || null,
       priority: newTaskPriority.value,
       due_date: newTaskDueDate.value || null,
+      project_id: newTaskProjectId.value || null,
     }
     if (auth.user?.role === 'admin' && assignedUserId.value) {
       payload.user_id = assignedUserId.value
@@ -567,6 +999,11 @@ async function addTask() {
     newTaskPriority.value = ''
     newTaskDueDate.value = ''
     assignedUserId.value = ''
+<<<<<<< Updated upstream
+=======
+    newTaskProjectId.value = ''
+    composerOpen.value = false
+>>>>>>> Stashed changes
   } catch {
     showToast(taskStore.error || 'Failed to add task', 'error')
   }
@@ -645,6 +1082,15 @@ onMounted(async () => {
   }
 
   await refetchWithFilters()
+<<<<<<< Updated upstream
+=======
+
+  try {
+    await projectStore.fetchProjects()
+  } catch (e) {
+    console.error('Failed to fetch projects', e)
+  }
+>>>>>>> Stashed changes
 
   if (auth.user?.role === 'admin') {
     try {

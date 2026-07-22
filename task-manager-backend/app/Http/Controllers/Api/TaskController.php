@@ -21,7 +21,11 @@ class TaskController extends Controller
 
     public function index(Request $request)
     {
+<<<<<<< Updated upstream
         $filters = $request->only(['status', 'priority', 'search', 'sort']);
+=======
+        $filters = $request->only(['status', 'priority', 'search', 'sort', 'project_id']);
+>>>>>>> Stashed changes
 
         return response()->json($this->taskService->getAll(Auth::user(), $filters));
     }

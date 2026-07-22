@@ -46,6 +46,17 @@
     <!-- Meta chips + actions -->
     <div class="flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap">
       <span
+<<<<<<< Updated upstream
+=======
+        v-if="task.project?.name"
+        class="inline-flex items-center gap-1.5 text-[11px] font-medium text-ink-700 bg-ink-950/4 rounded-md px-2 py-1"
+      >
+        <span class="w-2 h-2 rounded-full" :style="{ backgroundColor: task.project.color || '#3b55e6' }"></span>
+        {{ task.project.name }}
+      </span>
+
+      <span
+>>>>>>> Stashed changes
         v-if="dueLabel"
         class="inline-flex items-center gap-1 text-[11px] font-medium rounded-md px-2 py-1"
         :class="overdue ? 'bg-rose-50 text-rose-600' : 'bg-ink-950/4 text-ink-700'"

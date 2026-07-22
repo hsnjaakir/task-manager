@@ -19,6 +19,7 @@ class StoreTaskRequest extends FormRequest
             'priority'    => 'nullable|in:low,medium,high',
             'status'      => 'nullable|in:pending,in_progress,completed',
             'due_date'    => 'nullable|date',
+            'project_id'  => 'nullable|exists:projects,id',
         ];
 
         if (auth()->check() && auth()->user()->role === 'admin') {
