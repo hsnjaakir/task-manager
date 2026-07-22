@@ -21,6 +21,7 @@ class Task extends Model
         'priority',
         'due_date',
         'user_id',
+        'project_id',
     ];
 
     /**
@@ -29,5 +30,13 @@ class Task extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    /**
+     * Relation: a task may belong to one project
+     */
+    public function project()
+    {
+        return $this->belongsTo(Project::class);
     }
 }

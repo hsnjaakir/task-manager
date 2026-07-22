@@ -4,12 +4,14 @@ import Register from '../views/Auth/Register.vue'
 import Dashboard from '../views/Dashboard.vue'
 import UserList from '../views/Users/UserList.vue'
 import UserDetails from '@/views/Users/UserDetails.vue'
+import ProjectList from '@/views/Projects/ProjectList.vue'
 import { useAuthStore } from '../stores/auth'
 
 const routes = [
   { path: '/login', component: Login },
   { path: '/register', component: Register },
   { path: '/dashboard', component: Dashboard, meta: { requiresAuth: true } },
+  { path: '/projects', name: 'project.list', component: ProjectList, meta: { requiresAuth: true } },
   { path: '/', redirect: '/login' },
   // Admin-only routes
   {

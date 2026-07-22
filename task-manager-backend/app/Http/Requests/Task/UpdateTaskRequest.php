@@ -20,6 +20,7 @@ class UpdateTaskRequest extends FormRequest
             'priority'    => 'nullable|in:low,medium,high',
             'status'      => 'sometimes|in:pending,in-progress,completed',
             'due_date'    => 'sometimes|date',
+            'project_id'  => 'nullable|exists:projects,id',
         ];
 
         // Only allow user_id updates if the logged-in user is an admin

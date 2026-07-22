@@ -16,6 +16,16 @@
             Dashboard
           </router-link>
           <router-link
+<<<<<<< Updated upstream
+=======
+            to="/projects"
+            class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
+            :class="route.path.startsWith('/projects') ? 'bg-white/10 text-white' : 'text-ink-400 hover:text-white hover:bg-white/5'"
+          >
+            Projects
+          </router-link>
+          <router-link
+>>>>>>> Stashed changes
             v-if="auth.user?.role === 'admin'"
             to="/users"
             class="px-3 py-2 rounded-lg text-sm font-medium transition-colors"
@@ -25,7 +35,13 @@
           </router-link>
         </nav>
 
+<<<<<<< Updated upstream
         <div v-if="auth.user" class="flex items-center gap-3">
+=======
+        <div v-if="auth.user" class="flex items-center gap-2 sm:gap-3">
+          <NotificationBell />
+
+>>>>>>> Stashed changes
           <div class="hidden sm:flex items-center gap-2.5">
             <UserAvatar :name="auth.user.name" />
             <div class="leading-tight">
@@ -62,6 +78,10 @@ import { useAuthStore } from '@/stores/auth'
 import { useRouter, useRoute } from 'vue-router'
 import AppLogo from '@/components/AppLogo.vue'
 import UserAvatar from '@/components/UserAvatar.vue'
+<<<<<<< Updated upstream
+=======
+import NotificationBell from '@/components/NotificationBell.vue'
+>>>>>>> Stashed changes
 
 const auth = useAuthStore()
 const router = useRouter()
